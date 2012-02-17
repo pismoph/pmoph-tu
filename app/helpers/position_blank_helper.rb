@@ -1,0 +1,2 @@
+module PositionBlankHelper
+end
