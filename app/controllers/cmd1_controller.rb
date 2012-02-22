@@ -373,13 +373,13 @@ class Cmd1Controller < ApplicationController
         refcmnd = params[:refcmnd]
         forcedate = params[:forcedate]
         
-        hidOld = params[:hidOld]
+        hidOld = params[:hidOld] #ถ้าเป็นอดีตข้าราชการ hidOld จะเท่ากับ 1
         
         #กรณีที่ดึงอดีตข้าราชการขึ้นมา ก็ให้  query เอา pid ขึ้นมา โดยไม่ต้อง insert ตาราง pispersonel ใหม่อีก
         if hidOld != ""
-            sql = "select id from pispersonel where pid='#{pid}'"
-            rs = Cjob.find_by_sql(sql)
-            id = rs[0].id
+            sql = "select id as pispersonel_id from pispersonel where pid='#{pid}'"
+            rs = Pispersonel.find_by_sql(sql)
+            id = rs[0].pispersonel_id
         end
         
         #หาการเรียงลำดับของคอลัมน์ historder
@@ -390,12 +390,6 @@ class Cmd1Controller < ApplicationController
             historder = rs[0].historder.to_i + 1
         end
 
-        sql = "update pisj18 set id='#{id}'"
-        if salary != ""
-            sql += ", nowsalasb=#{salary}, salary=#{salary}"
-        end
-        sql += " where posid=#{posid}"
-        rs = Cjob.find_by_sql(sql)
         #rs2 = Pisj18.find(posid.to_i)
         #rs2.id = id
         #rs2.nowsalasb = salary
@@ -403,8 +397,8 @@ class Cmd1Controller < ApplicationController
         #rs2.save!
                 
         begin
-            Pisposhis.transaction do
-                if hidOld == ""
+            Pisposhis.transaction do                
+                if hidOld == "" #จะ insert เข้าตาราง pispersonel กรณีที่เพิ่มคนใหม่เท่านั้น
                     rs1 = Pispersonel.new
                     rs1.id = id
                     rs1.pcode = pcode
@@ -441,8 +435,13 @@ class Cmd1Controller < ApplicationController
                     rs1.specialty = specialty
                     rs1.bloodgroup = bloodgroup
                     rs1.save!
+                else
+                    #กรณีเป็นอดีตข้าราชการ บรรจุกลับ ต้องไปเปลี่ยนค่า pstatus ให้เป็น1 เพื่อบอกว่ามีสถานะเป็นข้าราชการแล้ว
+                    sql = "update pispersonel set pstatus='1' where id='#{id}'"
+                    rs = Pisj18.find_by_sql(sql)
                 end
 
+        
                 rs3 = Pisposhis.new
                 rs3.id = id
                 rs3.historder = historder
@@ -463,14 +462,22 @@ class Cmd1Controller < ApplicationController
                 rs3.refcmnd = refcmnd
                 rs3.ptcode = ptcode
                 rs3.save!
+                
+                sql = "update pisj18 set id='#{id}'"
+                if salary != ""
+                    sql += ", nowsalasb=#{salary}, salary=#{salary}"
+                end
+                sql += " where posid=#{posid}"
+                rs = Pisj18.find_by_sql(sql)
+        
             end
             
             return_data = {}
-            return_data[:success] = 'true'
+            return_data[:success] = true
             render :text => return_data.to_json, :layout => false
         rescue
             return_data = {}
-            return_data[:success] = 'false'
+            return_data[:success] = false
             render :text => return_data.to_json, :layout => false
         end
     end

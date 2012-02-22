@@ -7,25 +7,21 @@ var btnTest = new Ext.Button({
 	listeners: {
 		click: function(){
 			/*Ext.Ajax.request({
-				url: pre_url + "/cmd1/save_new"
+				url: pre_url + "/position_blank/rc_insert_update"
 				,params: {
-					posid: '6644'
+					posid: '888',
+					dat: 'hello'
 				}
 				,success: function(response,opts){
 					obj = Ext.util.JSON.decode(response.responseText);
-					Ext.Msg.alert(obj.dat);
+					if(obj.success == true){
+						Ext.Msg.alert("Complete", "Action is OK");
+					} else {
+						Ext.Msg.alert("Error", obj.msg);
+					}
 				}
 			});*/
-			/*combo1.getStore().load({
-				   params: {
-							updcode: 1150
-							,start: 0
-							,limit: 10
-				   }
-				   ,callback :function(){
-							combo1.setValue(1150);
-				   }
-			});*/
+			Ext.Msg.alert("data", "data="+hidOld.getValue());
 		}
 	}
 });
@@ -1679,14 +1675,14 @@ var frmAddEdit = new Ext.form.FormPanel({
 	]
 });
 
-var viewport = new Ext.Viewport({
+/*var viewport = new Ext.Viewport({
 	layout: 'border',
 	renderTo: Ext.getBody(),
 	//autoScroll: true,
 	items: [
 		frmAddEdit
 	]
-});
+});*/
 
 
 function funcSearchPosition(){
@@ -2406,7 +2402,7 @@ function save_data(){
 								upduser: 'admin', //user ที่บันทึก
 								codetrade: combo34.getValue(), //ใบอนุญาตประกอบวิชาชีพ
 								kbk: kbk, //สมาชิก กบข.
-								pstatus: '1', //มีค่า 1 กับ 0หรือว่างเปล่า
+								pstatus: '1', //มีค่า 1 กับ 0หรือว่างเปล่า เข้าใจว่า 1=เป็นข้าราชการ 0=อดีตข้าราชการ
 								ptcode: combo13.getValue(), //ว./วช./ชช.
 								pid: text20.getValue(), //เลขประจำตัวประชาชน
 								mincode: combo23.getValue(), //กระทรวง
@@ -2423,7 +2419,7 @@ function save_data(){
 							success: function(result, request ) {
 								obj = Ext.util.JSON.decode(result.responseText);
 								//debugger;
-								if( obj.success == 'true'){
+								if( obj.success == true){
 									Ext.Msg.show({
 										title:'Complete',
 										msg: 'บันทึกข้อมูลเสร็จแล้ว',
