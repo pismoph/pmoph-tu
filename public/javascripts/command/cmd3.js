@@ -11,7 +11,20 @@ var text2 = new Ext.form.TextField({
 	id: 'text2',
 	fieldLabel: 'เลขที่ตำแหน่ง',
 	width: 120,
-	allowBlank: false
+	allowBlank: false,
+	enableKeyEvents: true,
+	listeners: {
+		keypress: function( me, e ){
+			if(e.keyCode == e.ENTER){
+				text2_get_position(me);
+			}
+		},
+		change: function( me, newValue, oldValue ){
+			if(me.getValue() != ""){
+				text2_get_position(me);
+			}
+		}
+	}
 });
 
 var text4 = new Ext.form.TextField({

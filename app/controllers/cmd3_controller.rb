@@ -118,7 +118,7 @@ class Cmd3Controller < ApplicationController
             JOIN cprovince ON csubdept.provcode=cprovince.provcode
             JOIN pispersonel ON pisj18.posid=pispersonel.posid
             JOIN cprefix ON pispersonel.pcode=cprefix.pcode
-            WHERE pisj18.posid=#{posid}"
+            WHERE pisj18.posid=#{posid} AND pispersonel.pstatus='1'"
         #ต้องเป็นตำแหน่งที่มีคนบรรจุเท่านั้น
         sql += " AND NOT(pisj18.flagupdate='1' and (length(trim(pisj18.id))=0 or pisj18.id is null))"
         

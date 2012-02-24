@@ -1,5 +1,16 @@
 var pre_url = "";
 
+//-----------------------------------------------------------------
+//แปลงวันที่จากรูปแบบ SQL ไปเป็นวันที่รูปแบบของไทย
+//เช่น '2008-02-29' จะรีเทิร์นค่าเป็น '29/2/2551'
+//-----------------------------------------------------------------
+function date_sql2thai(sDate)
+{	if(sDate == "") return "";
+	var arr = sDate.split("-");
+	var yyyy = Number(arr[0]) + 543;
+	return arr[2]+"/"+arr[1]+"/"+yyyy;
+}
+
 var text1 = new Ext.form.TextField({
 	id: 'text1',
 	hideLabel: true,
@@ -11,7 +22,20 @@ var text2 = new Ext.form.TextField({
 	id: 'text2',
 	fieldLabel: 'เลขที่ตำแหน่ง',
 	width: 120,
-	allowBlank: false
+	allowBlank: false,
+	enableKeyEvents: true,
+	listeners: {
+		keypress: function( me, e ){
+			if(e.keyCode == e.ENTER){
+				text2_get_position(me.getValue());
+			}
+		},
+		change: function( me, newValue, oldValue ){
+			if(me.getValue() != ""){
+				text2_get_position(me.getValue());
+			}
+		}
+	}
 });
 
 var text4 = new Ext.form.TextField({
@@ -102,15 +126,23 @@ var button1 = new Ext.Button({
 	}
 });
 
-var button3 = new Ext.Button({
-	id: 'button3',
-	text: 'เลือกคำสั่งแก้ไข'
-});
-
 var button2 = new Ext.Button({
 	id: 'button2',
 	iconCls: 'zoom',
 	text: ''
+});
+
+var button3 = new Ext.Button({
+	id: 'button3',
+	text: 'เลือกคำสั่งแก้ไข',
+	listeners: {
+		click: function(){
+			winCommand.show();
+			GridStoreCommand.load({
+				params:{id: pispersonel_id.getValue()}
+			});
+		}
+	}
 });
 
 var combo1 = new Ext.ux.form.PisComboBox({
@@ -270,6 +302,10 @@ var checkbox2 = new Ext.form.Checkbox({
 
 var pispersonel_id = new Ext.form.Hidden({
 	id: 'pispersonel_id'
+});
+
+var historder_num = new Ext.form.Hidden({
+	id: 'historder_num'
 });
 
 var fieldset1 = new Ext.form.FieldSet({
@@ -464,7 +500,7 @@ var frmAddEdit = new Ext.form.FormPanel({
 				},
 				{
 					layout: 'form',
-					items: [text8, pispersonel_id],
+					items: [text8, pispersonel_id, historder_num],
 					style: 'padding-left:50px'
 				}
 			]
@@ -504,7 +540,7 @@ var frmAddEdit = new Ext.form.FormPanel({
 			formBind: true,
 			listeners: {
 				click: function(){
-					
+					save_data();
 				}
 			}
 		},
@@ -513,18 +549,27 @@ var frmAddEdit = new Ext.form.FormPanel({
 			iconCls: 'arrow-undo',
 			listeners: {
 				click: function(){
-					
+					Ext.MessageBox.confirm('ยืนยัน', 'ต้องการล้างข้อมูลในฟอร์มทั้งหมดนี้ใช่หรือไม่ ?',
+						function(btn) {
+							if(btn == 'yes') {
+								frmAddEdit.getForm().reset();
+							}
+							else {
+								return;
+							}
+						}
+					);
 				}
 			}
 		}
 	]
 });
 
-function text2_get_position(posid, id){
+function text2_get_position(posid){
 	Ext.Ajax.request({
 		method: 'post',
 		url: pre_url+'/cmd4/get_position',
-		params: {id: id, posid: posid},
+		params: {posid: posid},
 		success: function(result, request) {
 			var x = posid;
 			var dat = Ext.util.JSON.decode(result.responseText).Records[0];
@@ -732,7 +777,7 @@ var GridPosition = new Ext.grid.GridPanel({
 		rowdblclick: function( me, rowIndex, e ){
 			text2.setValue(me.selModel.selections.items[0].data.posid);
 			winSearchPosition.hide();
-			text2_get_position(me.selModel.selections.items[0].data.posid, me.selModel.selections.items[0].data.id);
+			text2_get_position(me.selModel.selections.items[0].data.posid);
 		}
 	},
 	tbar: [
@@ -810,7 +855,7 @@ var winSearchPosition = new Ext.Window({
 					if( GridPosition.selModel.selections.items.length != 0 ){
 						text2.setValue(GridPosition.selModel.selections.items[0].data.posid);
 						winSearchPosition.hide();
-						text2_get_position(GridPosition.selModel.selections.items[0].data.posid, GridPosition.selModel.selections.items[0].data.id);
+						text2_get_position(GridPosition.selModel.selections.items[0].data.posid);
 					} else {
 						Ext.Msg.alert("Error", "กรุณาคลิกเลือกเลขที่ตำแหน่งที่ต้องการ");
 					}
@@ -829,6 +874,183 @@ var winSearchPosition = new Ext.Window({
 	]
 });
 
+function get_command(obj){
+	winCommand.hide();
+	pispersonel_id.setValue(obj.id);
+	historder_num.setValue(obj.historder);
+	text1.setValue(obj.refcmnd); //คำสั่ง
+	combo1.getStore().load({ //ความเคลื่อนไหว
+		params: {
+			updcode: obj.updcode
+			,start: 0
+			,limit: 10
+		},
+		callback :function(){
+			combo1.setValue(obj.updcode);
+		}
+	});
+	
+	date1.setValue(date_sql2thai(obj.forcedate)); //วันที่มีผลบังคับใช้
+	
+	combo2.getStore().load({ //ตำแหน่งสายงาน
+		params: {
+			poscode: obj.poscode
+			,start: 0
+			,limit: 10
+		},
+		callback :function(){
+			combo2.setValue(obj.poscode);
+		}
+	});
+	
+	combo8.getStore().load({ //ระดับ
+		params: {
+			ccode: obj.c
+			,start: 0
+			,limit: 10
+		},
+		callback :function(){
+			combo8.setValue(obj.c);
+		}
+	});
+	
+	text5.setValue(obj.salary); //เงินเดือน
+	
+	combo13.getStore().load({ //ว. วช. ชช.
+		params: {
+			ptcode: obj.ptcode
+			,start: 0
+			,limit: 10
+		},
+		callback :function(){
+			combo13.setValue(obj.ptcode);
+		}
+	});
+	
+	combo3.getStore().load({ //ตำแหน่งบริหาร
+		params: {
+			excode: obj.excode
+			,start: 0
+			,limit: 10
+		},
+		callback :function(){
+			combo3.setValue(obj.excode);
+		}
+	});
+	
+	combo9.getStore().load({ //ความเชี่ยวชาญ
+		params: {
+			epcode: obj.epcode
+			,start: 0
+			,limit: 10
+		},
+		callback :function(){
+			combo9.setValue(obj.epcode);
+		}
+	});
+	
+	combo4.getStore().load({ //กระทรวง
+		params: {
+			mcode: obj.mcode
+			,start: 0
+			,limit: 10
+		},
+		callback :function(){
+			combo4.setValue(obj.mcode);
+		}
+	});
+	
+	combo5.getStore().load({ //กรม
+		params: {
+			deptcode: obj.deptcode
+			,start: 0
+			,limit: 10
+		},
+		callback :function(){
+			combo5.setValue(obj.deptcode);
+		}
+	});
+	
+	combo10.getStore().load({ //กอง
+		params: {
+			dcode: obj.dcode
+			,start: 0
+			,limit: 10
+		},
+		callback :function(){
+			combo10.setValue(obj.dcode);
+		}
+	});
+	
+	text4.setValue(obj.sdcode); //หน่วยงาน
+	text7.setValue(obj.fullsubdeptname); //หน่วยงาน
+	
+	combo6.getStore().load({ //กลุ่มภารกิจ
+		params: {
+			subsdcode: obj.subsdcode
+			,start: 0
+			,limit: 10
+		},
+		callback :function(){
+			combo6.setValue(obj.subsdcode);
+		}
+	});
+	
+	combo11.getStore().load({ //ฝ่าย กลุ่มงาน
+		params: {
+			seccode: obj.seccode
+			,start: 0
+			,limit: 10
+		},
+		callback :function(){
+			combo11.setValue(obj.seccode);
+		}
+	});
+	
+	combo7.getStore().load({ //งาน
+		params: {
+			jobcode: obj.jobcode
+			,start: 0
+			,limit: 10
+		},
+		callback :function(){
+			combo7.setValue(obj.jobcode);
+		}
+	});
+	
+	text6.setValue(obj.note); //หมายเหตุ
+}
+
+var GridStoreCommand = new Ext.data.JsonStore({
+	url: pre_url+'/cmd4/list_command',
+	root: 'Records',
+	totalProperty: 'totalCount',
+	idProperty: 'historder',
+	fields: ["id", "historder", "forcedate", "poscode", "excode", "epcode", "mcode", "dcode", "deptcode", "sdcode",
+        "seccode", "jobcode", "hmcode", "updcode", "posid", "c", "salary", "refcmnd", "note", "fullsubdeptname"]
+});
+
+var GridCommand = new Ext.grid.GridPanel({
+	id: 'GridCommand',
+	title: '',
+	frame: false,
+	stripeRows: true,
+	store: GridStoreCommand,
+	viewConfig: {forceFit: true},
+	loadMask: {
+		msg: 'Please wait...'
+	},
+	columns: [
+		{header: "ลำดับ",dataIndex: 'historder', width: 1.5, sortable: true},
+		{header: "เลขที่คำสั่ง",dataIndex: 'refcmnd', width: 10, sortable: true},
+		{header: "วันที่มีผลบังคับใช้",dataIndex: 'forcedate', width: 4, sortable: true, renderer: date_sql2thai}
+	],
+	listeners: {
+		rowdblclick: function( me, rowIndex, e ){
+			get_command(me.selModel.selections.items[0].data);
+		}
+	}
+});
 
 var winCommand = new Ext.Window({
 	title: 'ค้นหาคำสั่งที่ต้องการแก้ไข',
@@ -850,7 +1072,7 @@ var winCommand = new Ext.Window({
 			listeners: {
 				click: function(){
 					if( GridCommand.selModel.selections.items.length != 0 ){
-						setResultPlace();
+						get_command(GridCommand.selModel.selections.items[0].data);
 					} else {
 						Ext.Msg.alert("Error", "กรุณาคลิกเลือกคำสั่งที่ต้องการแก้ไข");
 					}
@@ -867,3 +1089,61 @@ var winCommand = new Ext.Window({
 		}
 	]
 });
+
+function save_data(){
+	Ext.Ajax.request({
+		method: 'post',
+		url: pre_url+'/cmd4/save',
+		params: {
+			refcmnd: text1.getValue(), //คำสั่ง
+			updcode: combo1.getValue(), //การเคลื่อนไหว
+			forcedate: date1.getValue(), //วันที่มีผลบังคับใช้
+			poscode: combo2.getValue(), //ตำแหน่งสายงาน
+			c: combo8.getValue(), //ระดับ
+			salary: text5.getValue(), //เงินเดือน
+			ptcode: combo13.getValue(), //ว./วช./ชช.
+			excode: combo3.getValue(), //ตำแหน่งบริหาร
+			epcode: combo9.getValue(), //ความเชี่ยวชาญ
+			mincode: combo4.getValue(), //กระทรวง
+			deptcode: combo5.getValue(), //กรม
+			dcode: combo10.getValue(), //กอง
+			sdcode: text4.getValue(), //รหัสหน่วยงาน
+			seccode: combo11.getValue(), //ฝ่าย /กลุ่มงาน
+			jobcode: combo7.getValue(), //งาน
+			note: text6.getValue(), //หมายเหตุ
+			id: pispersonel_id.getValue(), //id ของบุคคล
+			historder: historder_num.getValue(), //หมายเลขการเรียงลำดับของ pisposhis และจะใช้เป็น id หลักยึดเพื่อ update ด้วย
+			posid: text2.getValue(), //เลขที่ตำแหน่ง
+			chk1: checkbox1.getValue(), //ปรับปรุงข้อมูลตำแหน่ง(จ.18)...ถือจ่ายปัจจุบัน จะคืนค่า true กับ false
+			chk2: checkbox2.getValue(), //ปรับปรุงข้อมูลปฏิบัติราชการปัจจุบัน จะคืนค่า true กับ false
+			
+			upddate: '', //วันที่บันทึก เดี๋ยวให้ทาง postgres บันทึกเวลาเอง
+			upduser: 'admin' //user ที่บันทึก
+		},
+		success: function(result, request ) {
+			obj = Ext.util.JSON.decode(result.responseText);
+			//debugger;
+			if( obj.success == true){
+				Ext.Msg.show({
+					title:'Complete',
+					msg: 'บันทึกข้อมูลเสร็จแล้ว',
+					buttons: Ext.Msg.OK,
+					fn: function(){
+						frmAddEdit.getForm().reset();
+					},
+					animEl: 'text1',
+					icon: Ext.MessageBox.INFO
+				});
+			} else {
+				Ext.Msg.show({
+					title:'Error',
+					msg: 'เกิดข้อผิดพลาดในการบันทึก',
+					buttons: Ext.Msg.OK,
+					fn: function(){},
+					animEl: 'text1',
+					icon: Ext.MessageBox.ERROR
+				});
+			}
+		}
+	});
+}
