@@ -9,6 +9,7 @@ var rowNumberer = function(value, p, record) {
     }
     return ds.indexOf(record)+i+1;
 };
+
 cur_ref = "";
 var mainMenu = new Ext.Toolbar({
     region:'north'

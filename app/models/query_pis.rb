@@ -1,4 +1,5 @@
 # coding: utf-8
+
 class QueryPis < ActiveRecord::Base
   def self.update_by_sql(sql)
     begin

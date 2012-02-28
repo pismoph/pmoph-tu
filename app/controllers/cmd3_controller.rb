@@ -1,5 +1,6 @@
 class Cmd3Controller < ApplicationController
     skip_before_filter :verify_authenticity_token
+
     
     #กรณีคำสั่งที่ 5 นี้ list_position จะหมายถึงค้นหาเพื่อต้องการผลลัพธ์ที่เป็นตำแหน่งข้าราชการปัจจุบัน
     def list_position

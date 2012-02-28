@@ -1,4 +1,4 @@
-var pre_url = "";
+var pre_url = ""; 
 
 var text1 = new Ext.form.TextField({
 	id: 'text1',

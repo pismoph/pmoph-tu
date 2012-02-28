@@ -1,5 +1,6 @@
 class Cmd1Controller < ApplicationController
     skip_before_filter :verify_authenticity_token
+
     
     def get_old_person
         pispersonel_id = params[:pispersonel_id]

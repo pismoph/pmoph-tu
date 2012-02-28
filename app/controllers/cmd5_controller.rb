@@ -1,6 +1,7 @@
 class Cmd5Controller < ApplicationController
     skip_before_filter :verify_authenticity_token
     
+
     #กรณีคำสั่งที่ 5 นี้ list_position จะหมายถึงค้นหาเพื่อต้องการผลลัพธ์ที่เป็นตำแหน่งข้าราชการปัจจุบัน
     def list_position
         start = params[:start].to_s
@@ -118,7 +119,7 @@ class Cmd5Controller < ApplicationController
             JOIN cprovince ON csubdept.provcode=cprovince.provcode
             JOIN pispersonel ON pisj18.posid=pispersonel.posid
             JOIN cprefix ON pispersonel.pcode=cprefix.pcode
-            WHERE pisj18.posid=#{posid}"
+            WHERE pisj18.posid=#{posid} AND pispersonel.pstatus='1'"
         #ต้องเป็นตำแหน่งที่มีคนบรรจุเท่านั้น
         sql += " AND NOT(pisj18.flagupdate='1' and (length(trim(pisj18.id))=0 or pisj18.id is null))"
         

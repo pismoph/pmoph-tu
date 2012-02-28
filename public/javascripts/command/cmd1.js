@@ -1,4 +1,4 @@
-var pre_url = "";
+var pre_url = ""; 
 
 var btnTest = new Ext.Button({
 	id: 'btnTest',
@@ -609,12 +609,31 @@ var text34 = new Ext.form.TextField({
 	width: 640
 });
 
+function date1_auto_fill(dt){
+	date3.setValue(date1.getValue());
+	date5.setValue(date1.getValue());
+	date8.setValue(date1.getValue());
+}
+
 var date1 = new Ext.form.DateField({
 	id: 'date1',
 	fieldLabel: 'วันที่มีผลบังคับใช้',
 	format: 'd/m/Y',
 	width: 100,
-	allowBlank: false
+	allowBlank: false,
+	enableKeyEvents: true,
+	listeners: {
+		keypress: function( me, e ){
+			if(e.keyCode == e.ENTER){
+				date1_auto_fill(me.getValue());
+			}
+		},
+		change: function( me, newValue, oldValue ){
+			if(me.getValue() != ""){
+				date1_auto_fill(me.getValue());
+			}
+		}
+	}
 });
 
 function date2_calculate(me){
@@ -1861,6 +1880,7 @@ function funcSearchOldPerson(){
 //-----------------------------------------------------------------
 function date_sql2thai(sDate)
 {	if(sDate == "") return "";
+	sDate = sDate.substr(0, 10);
 	var arr = sDate.split("-");
 	var yyyy = Number(arr[0]) + 543;
 	return arr[2]+"/"+arr[1]+"/"+yyyy;
