@@ -380,6 +380,22 @@ var mainMenu = new Ext.Toolbar({
                             cur_ref = "calc_up_salary";
                             Ext.ux.OnDemandLoad.load(pre_url+"/javascripts/command/calc_up_salary.js","initCmd");
                         }
+                    },
+                    {
+                        text: "บันทึกผลการประเมินการปฏิบัติงาน"
+                        ,handler: function(){
+                            loadMask.show();
+                            cur_ref = "calc_up_salary";
+                            Ext.ux.OnDemandLoad.load(pre_url+"/javascripts/command/calc_up_salary.js","initCmd");
+                        }
+                    },
+                    {
+                        text: "คำสั่งเลื่อนเงินเดือน"
+                        ,handler: function(){
+                            loadMask.show();
+                            cur_ref = "calc_up_salary";
+                            Ext.ux.OnDemandLoad.load(pre_url+"/javascripts/command/calc_up_salary.js","initCmd");
+                        }
                     }
                 ]
             }

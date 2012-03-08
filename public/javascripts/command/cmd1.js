@@ -1,5 +1,7 @@
 var pre_url = ""; 
 
+//---------------------------------------------------------------------------
+
 var btnTest = new Ext.Button({
 	id: 'btnTest',
 	iconCls: 'zoom',

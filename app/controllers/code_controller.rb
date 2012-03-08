@@ -2,7 +2,8 @@
 class CodeController < ApplicationController
     skip_before_filter :verify_authenticity_token
 
-
+    #---------------------------------------------------------------------------
+    
     def cprovince
         sql = "SELECT provcode, provname FROM cprovince ORDER BY provname"
         rs = Cjob.find_by_sql(sql)

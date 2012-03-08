@@ -1,3 +1,6 @@
+var pre_url = "";
+
+//---------------------------------------------------------------------------
 
 var txtCommandNumber = new Ext.form.TextField({
 	id: 'txtCommandNumber',

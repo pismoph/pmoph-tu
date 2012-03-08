@@ -1,5 +1,7 @@
 var pre_url = ""; 
 
+//---------------------------------------------------------------------------
+
 var text1 = new Ext.form.TextField({
 	id: 'text1',
 	fieldLabel: 'คำสั่ง',
