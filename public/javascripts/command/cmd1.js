@@ -1,6 +1,22 @@
 var pre_url = ""; 
 
 //---------------------------------------------------------------------------
+function date1_auto_fill(){
+	var upd = Number(combo1.getValue());
+	if(upd >= 1 && upd <= 115){ //บรรจุใหม่
+		date3.setValue(date_sql2thai(date1.getValue().format('Y-m-d')));
+		date5.setValue(date_sql2thai(date1.getValue().format('Y-m-d')));
+		date8.setValue(date_sql2thai(date1.getValue().format('Y-m-d')));
+	} else if(upd >= 121 && upd <= 126){ //บรรจุกลับ
+		date5.setValue(date_sql2thai(date1.getValue().format('Y-m-d')));
+		date6.setValue(date_sql2thai(date1.getValue().format('Y-m-d')));		
+	} else if(upd >= 201 && upd <= 300){ //ย้ายไป
+		date5.setValue(date_sql2thai(date1.getValue().format('Y-m-d')));
+	} else if(upd >= 400 && upd <= 431){ //รับโอน
+		date4.setValue(date_sql2thai(date1.getValue().format('Y-m-d')));
+		date5.setValue(date_sql2thai(date1.getValue().format('Y-m-d')));
+	}
+}
 
 var btnTest = new Ext.Button({
 	id: 'btnTest',
@@ -174,6 +190,7 @@ function text2_get_position(me){
 				
 				combo6.setValue("");
 				combo12.setValue("");
+				
 			} else {
 				Ext.Msg.show({
 					title:'ไม่พบข้อมูล',
@@ -285,7 +302,8 @@ var text4 = new Ext.form.NumberField({
 var text5 = new Ext.form.NumberField({
 	id: 'text5',
 	fieldLabel: 'เงินเดือน (บาท)',
-	width: 100
+	width: 100,
+	allowBlank: false
 });
 
 var text6 = new Ext.form.TextField({
@@ -324,89 +342,92 @@ function text20_check_valid(me){
 			//debugger;
 			if(obj.Records.length != 0){
 				Ext.Msg.alert("เตือน", "เลขประจำตัวประชาชนนี้ ซ้ำกับในฐานข้อมูล");
+			} else {
+				//แต่ถ้าเป็น ID จากอดีตข้าราชการ ก็ให้ดึงข้อมูลเก่าขึ้นมารอไว้เลย
+				//หลังจากตรวจสอบแล้ว ก็ให้เอาข้อมูล หน่วยงานปฏิบัติงานจริงมารอไว้เลย
+				combo21.setValue(1);
+				
+				//combo23.setValue(combo4.getValue());
+				combo23.getStore().load({
+					params: {
+						mcode: combo4.getValue()
+						,start: 0
+						,limit: 10
+					},
+					callback :function(){
+						combo23.setValue(combo4.getValue());
+					}
+				});
+			
+				//combo24.setValue(combo5.getValue());
+				combo24.getStore().load({
+					params: {
+						deptcode: combo5.getValue()
+						,start: 0
+						,limit: 10
+					},
+					callback :function(){
+						combo24.setValue(combo5.getValue());
+					}
+				});
+			
+				//combo25.setValue(combo10.getValue());
+				combo25.getStore().load({
+					params: {
+						dcode: combo10.getValue()
+						,start: 0
+						,limit: 10
+					},
+					callback :function(){
+						combo25.setValue(combo10.getValue());
+					}
+				});
+			
+				combo26.getStore().load({
+					params: {
+						subsdcode: combo6.getValue()
+						,start: 0
+						,limit: 10
+					},
+					callback :function(){
+						combo26.setValue(combo6.getValue());
+					}
+				});
+				
+				text23.setValue(text4.getValue());
+				text24.setValue(text7.getValue());
+				
+				//combo27.setValue(combo11.getValue());
+				combo27.getStore().load({
+					params: {
+						seccode: combo11.getValue()
+						,start: 0
+						,limit: 10
+					},
+					callback :function(){
+						combo27.setValue(combo11.getValue());
+					}
+				});
+			
+				//combo28.setValue(combo7.getValue());
+				combo28.getStore().load({
+					params: {
+						jobcode: combo7.getValue()
+						,start: 0
+						,limit: 10
+					},
+					callback :function(){
+						combo28.setValue(combo7.getValue());
+					}
+				});
+			
+				combo29.setValue('');
+				
+				date1_auto_fill();
 			}
 		}
 	});
 	
-	//แต่ถ้าเป็น ID จากอดีตข้าราชการ ก็ให้ดึงข้อมูลเก่าขึ้นมารอไว้เลย
-	//หลังจากตรวจสอบแล้ว ก็ให้เอาข้อมูล หน่วยงานปฏิบัติงานจริงมารอไว้เลย
-	combo21.setValue(1);
-	
-	//combo23.setValue(combo4.getValue());
-	combo23.getStore().load({
-		params: {
-			mcode: combo4.getValue()
-			,start: 0
-			,limit: 10
-		},
-		callback :function(){
-			combo23.setValue(combo4.getValue());
-		}
-	});
-
-	//combo24.setValue(combo5.getValue());
-	combo24.getStore().load({
-		params: {
-			deptcode: combo5.getValue()
-			,start: 0
-			,limit: 10
-		},
-		callback :function(){
-			combo24.setValue(combo5.getValue());
-		}
-	});
-
-	//combo25.setValue(combo10.getValue());
-	combo25.getStore().load({
-		params: {
-			dcode: combo10.getValue()
-			,start: 0
-			,limit: 10
-		},
-		callback :function(){
-			combo25.setValue(combo10.getValue());
-		}
-	});
-
-	combo26.getStore().load({
-		params: {
-			subsdcode: combo6.getValue()
-			,start: 0
-			,limit: 10
-		},
-		callback :function(){
-			combo26.setValue(combo6.getValue());
-		}
-	});
-	
-	text23.setValue(text4.getValue());
-	text24.setValue(text7.getValue());
-	
-	//combo27.setValue(combo11.getValue());
-	combo27.getStore().load({
-		params: {
-			seccode: combo11.getValue()
-			,start: 0
-			,limit: 10
-		},
-		callback :function(){
-			combo27.setValue(combo11.getValue());
-		}
-	});
-
-	//combo28.setValue(combo7.getValue());
-	combo28.getStore().load({
-		params: {
-			jobcode: combo7.getValue()
-			,start: 0
-			,limit: 10
-		},
-		callback :function(){
-			combo28.setValue(combo7.getValue());
-		}
-	});
-
-	combo29.setValue('');
 }
 
 function isNationalID(id) {
@@ -611,12 +632,6 @@ var text34 = new Ext.form.TextField({
 	width: 640
 });
 
-function date1_auto_fill(dt){
-	date3.setValue(date1.getValue());
-	date5.setValue(date1.getValue());
-	date8.setValue(date1.getValue());
-}
-
 var date1 = new Ext.form.DateField({
 	id: 'date1',
 	fieldLabel: 'วันที่มีผลบังคับใช้',
@@ -627,12 +642,12 @@ var date1 = new Ext.form.DateField({
 	listeners: {
 		keypress: function( me, e ){
 			if(e.keyCode == e.ENTER){
-				date1_auto_fill(me.getValue());
+				
 			}
 		},
 		change: function( me, newValue, oldValue ){
 			if(me.getValue() != ""){
-				date1_auto_fill(me.getValue());
+				
 			}
 		}
 	}
@@ -1883,6 +1898,7 @@ function funcSearchOldPerson(){
 function date_sql2thai(sDate)
 {	if(sDate == "") return "";
 	sDate = sDate.substr(0, 10);
+	//Ext.Msg.alert(sDate);
 	var arr = sDate.split("-");
 	var yyyy = Number(arr[0]) + 543;
 	return arr[2]+"/"+arr[1]+"/"+yyyy;
@@ -2054,6 +2070,13 @@ function setResultOldPerson(id){
 				text33.setValue(dat.note);
 				//หมายเหตุ2
 				text34.setValue(dat.note2);
+				
+				date1_auto_fill();
+				
+				date_x_calculate(date3, text27);
+				date_x_calculate(date5, text29);
+				date_x_calculate(date8, text30);
+				date_x_calculate(date9, text31);
 				
 			} else {
 				Ext.Msg.show({

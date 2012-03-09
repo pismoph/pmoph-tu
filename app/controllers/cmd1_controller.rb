@@ -150,6 +150,16 @@ class Cmd1Controller < ApplicationController
         birthDate = bDate[0, 10]
         yearDate = birthDate[0, 4]
         
+        #คำนวณวันที่ครบเกษียณ หากเกิดตั้งแต่วันที่ 2 ตุลา ไปจนถึง 31 ธันวา จะต้องบวกปีครบเกษียณอีก 1 ปี
+        m = birthDate[5, 2].to_i
+        d = birthDate[8, 2].to_i
+        plus_one = 0;
+        if m == 10 || m == 11 || m==12
+            if d >= 2
+                plus_one = 1;
+            end
+        end
+        
         sql = "SELECT
             EXTRACT(year from AGE(NOW(), '#{birthDate}')) AS age_y,
             EXTRACT(month from AGE(NOW(), '#{birthDate}')) AS age_m,
@@ -179,7 +189,7 @@ class Cmd1Controller < ApplicationController
         return_data[:Records]   = {
             :age_year => age_y,
             :age_text => "#{age_y} ปี #{age_m} เดือน #{age_d} วัน",
-            :retire_date => "30/09/#{yearDate.to_i+60+543}",
+            :retire_date => "30/09/#{yearDate.to_i+60+543+plus_one}",
             :retire_text => "#{retire_y} ปี #{retire_m} เดือน #{retire_d} วัน"
         }
         render :text => return_data.to_json,:layout => false
@@ -385,7 +395,7 @@ class Cmd1Controller < ApplicationController
         end
         
         #หาการเรียงลำดับของคอลัมน์ historder
-        sql = "select id, historder from pisposhis where id='#{id}' and posid=#{posid} order by historder desc"
+        sql = "select id, historder from pisposhis where id='#{id}' order by historder desc"
         rs = Cjob.find_by_sql(sql)
         historder = 1
         if rs.count() > 0
@@ -439,7 +449,7 @@ class Cmd1Controller < ApplicationController
                     rs1.save!
                 else
                     #กรณีเป็นอดีตข้าราชการ บรรจุกลับ ต้องไปเปลี่ยนค่า pstatus ให้เป็น1 เพื่อบอกว่ามีสถานะเป็นข้าราชการแล้ว
-                    sql = "update pispersonel set pstatus='1' where id='#{id}'"
+                    sql = "update pispersonel set pstatus='1', posid=#{posid} where id='#{id}'"
                     rs = Pisj18.find_by_sql(sql)
                 end
 

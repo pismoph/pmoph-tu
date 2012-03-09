@@ -355,7 +355,7 @@ var mainMenu = new Ext.Toolbar({
                             cur_ref = "cmd5";
                             Ext.ux.OnDemandLoad.load(pre_url+"/javascripts/command/cmd5.js","initCmd");
                         }
-                    },
+                    }/*,
                     "-",
                     {
                         text: "คำนวณเงินสำหรับใช้ในการเลื่อนเงินเดือน"
@@ -396,7 +396,7 @@ var mainMenu = new Ext.Toolbar({
                             cur_ref = "calc_up_salary";
                             Ext.ux.OnDemandLoad.load(pre_url+"/javascripts/command/calc_up_salary.js","initCmd");
                         }
-                    }
+                    }*/
                 ]
             }
         },

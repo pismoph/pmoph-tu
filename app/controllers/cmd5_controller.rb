@@ -199,8 +199,8 @@ class Cmd5Controller < ApplicationController
                 sql += " where posid=#{posid}"
                 rs = Pisj18.find_by_sql(sql)
                 
-                #กำหนดสถานะบุคคลให้เป็นอดีตราชการ
-                sql = "update pispersonel set pstatus='0', upddate=now(), upduser='#{upduser}' where id='#{id}'"
+                #กำหนดสถานะบุคคลให้เป็นอดีตราชการ และเอาวันที่มีผลบังคับใช้ มาใส่เป็นวันที่ออกจากราชการด้วย
+                sql = "update pispersonel set pstatus='0', exitdate='#{forcedate}', upddate=now(), upduser='#{upduser}' where id='#{id}'"
                 rs = Pispersonel.find_by_sql(sql)
         
                 #เพิ่มเรคอร์ดประวัติ

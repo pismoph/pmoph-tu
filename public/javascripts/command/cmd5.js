@@ -198,10 +198,41 @@ var text3 = new Ext.form.TextField({
 	width: 120
 });
 
-var text4 = new Ext.form.TextField({
+var text4 = new Ext.form.NumberField({
 	id: 'text4',
 	fieldLabel: 'หน่วยงาน',
-	width: 100
+	width: 100,
+	allowBlank: false,
+	enableKeyEvents: true,
+	listeners: {
+		keypress: function( me, e ){
+			if(e.keyCode == e.ENTER){
+				if(me.getValue() != ""){
+					Ext.Ajax.request({
+						method: 'post',
+						url: pre_url+'/cmd3/get_place',
+						params: {id: me.getValue()},
+						success: function(result, request ) {
+							var dat = Ext.util.JSON.decode(result.responseText).Records;
+							if(dat.length == 0){
+								text7.setValue('');
+								Ext.Msg.show({
+									title:'ไม่พบข้อมูล',
+									msg: 'ไม่พบข้อมูลหน่วยงานที่ค้นหา',
+									buttons: Ext.Msg.OK,
+									fn: function(){},
+									animEl: 'text4',
+									icon: Ext.MessageBox.ERROR
+								});
+							} else {
+								text7.setValue(dat[0].fullsubdeptname);
+							}
+						}
+					});
+				}
+			}
+		}
+	}
 });
 
 var text5 = new Ext.form.NumberField({
