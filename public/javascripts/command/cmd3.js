@@ -854,8 +854,10 @@ function save_data(){
 			sdcode: text4.getValue(), //รหัสหน่วยงาน
 			seccode: combo11.getValue(), //ฝ่าย /กลุ่มงาน
 			jobcode: combo7.getValue(), //งาน
+			fullname: text7.getValue(),
 
-			note: 'ไปปฏิบัติราชการ '+text7.getValue()+' '+text6.getValue(), //หมายเหตุ
+			//note: 'ไปปฏิบัติราชการ '+text7.getValue()+' '+text6.getValue(), //หมายเหตุ
+			note: text6.getValue(), //หมายเหตุ
 			
 			upddate: '', //วันที่บันทึก เดี๋ยวให้ทาง postgres บันทึกเวลาเอง
 			upduser: 'admin' //user ที่บันทึก

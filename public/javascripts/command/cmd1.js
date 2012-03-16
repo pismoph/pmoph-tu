@@ -1,6 +1,5 @@
 var pre_url = ""; 
 
-//---------------------------------------------------------------------------
 function date1_auto_fill(){
 	var upd = Number(combo1.getValue());
 	if(upd >= 1 && upd <= 115){ //บรรจุใหม่
@@ -331,7 +330,9 @@ function text20_check_valid(me){
 		return;
 	}
 	
-	//ตรวจสอบการมีอยู่แล้วของเลขบัตรประชาชน แล้วแค่เตือนเท่านั้น
+	//ตรวจสอบการมีอยู่แล้วของเลขบัตรประชาชน
+	//ถ้าเป็นเลขบัตรประชาชนที่มีอยู่แล้ว และปัจจุบันเป็นข้าราชการอยู่ มันจะต้องเตือนว่าเลขซ้ำ และเคลียร์ text20 ไปก่อน
+	//ถ้าเป็นเลขบัตรประชาชนที่มีอยู่แล้ว แต่เป็นอดีตข้าราชการ ก็ให้ดึงข้อมูลคนนั้นขึ้นมารอไว้เลย ไม่ต้องเตือนอะไร
 	Ext.Ajax.request({
 		url: pre_url + "/cmd1/pid_check_duplicate"
 		,params: {
@@ -341,10 +342,24 @@ function text20_check_valid(me){
 			obj = Ext.util.JSON.decode(response.responseText);
 			//debugger;
 			if(obj.Records.length != 0){
-				Ext.Msg.alert("เตือน", "เลขประจำตัวประชาชนนี้ ซ้ำกับในฐานข้อมูล");
+				if(obj.Records[0].pstatus == "1"){
+					//ถ้า pstatus=1 แสดงว่าเลขบัตรประชาชนนี้เป็นข้าราชการปัจจุบันนี้แล้ว
+					
+					Ext.Msg.alert("เตือน", "เลขประจำตัวประชาชนนี้ ซ้ำกับในฐานข้อมูล");
+					text20.setValue("");
+					return;
+				} else {
+					//แต่ถ้าเป็น ID จากอดีตข้าราชการ ก็ให้ดึงข้อมูลเก่าขึ้นมารอไว้เลย
+					
+					hidOld.setValue("1"); //ระบุว่าเป็นข้อมูลอดีตข้าราชการ
+					setResultOldPerson(obj.Records[0].id);
+				}
 			} else {
-				//แต่ถ้าเป็น ID จากอดีตข้าราชการ ก็ให้ดึงข้อมูลเก่าขึ้นมารอไว้เลย
-				//หลังจากตรวจสอบแล้ว ก็ให้เอาข้อมูล หน่วยงานปฏิบัติงานจริงมารอไว้เลย
+				//ถ้า obj.Records.length เป็น 0 แสดงว่าไม่ซ้ำกับฐานข้อมูล แสดงว่าเป็นคนใหม่
+				//ก็ให้เอาข้อมูล หน่วยงานปฏิบัติงานจริงมารอไว้เลย
+				
+				hidOld.setValue(""); //ระบุว่าเป็นการป้อนเลข13หลักเข้าไปใหม่
+				
 				combo21.setValue(1);
 				
 				//combo23.setValue(combo4.getValue());
@@ -450,13 +465,11 @@ var text20 = new Ext.form.NumberField({
 	listeners: {
 		keypress: function( me, e ){
 			if(e.keyCode == e.ENTER){
-				hidOld.setValue(""); //ระบุว่าเป็นการป้อนเลข13หลักเข้าไปใหม่
 				text20_check_valid(me);
 			}
 		},
 		change: function( me, newValue, oldValue ){
 			if(me.getValue() != ""){
-				hidOld.setValue(""); //ระบุว่าเป็นการป้อนเลข13หลักเข้าไปใหม่
 				text20_check_valid(me);
 			}
 		}
@@ -830,6 +843,7 @@ var button3 = new Ext.Button({
 		}
 	}
 });
+
 var button4 = new Ext.Button({
 	id: 'button4',
 	iconCls: 'zoom',
@@ -977,7 +991,6 @@ var combo12 = new Ext.form.ComboBox({
 		}
 	})
 });
-
 
 var combo13 = new Ext.ux.form.PisComboBox({
 	fieldLabel: 'ว. / วช. /ชช.'
@@ -1895,8 +1908,9 @@ function funcSearchOldPerson(){
 //แปลงวันที่จากรูปแบบ SQL ไปเป็นวันที่รูปแบบของไทย
 //เช่น '2008-02-29' จะรีเทิร์นค่าเป็น '29/2/2551'
 //-----------------------------------------------------------------
-function date_sql2thai(sDate)
-{	if(sDate == "") return "";
+function date_sql2thai(sDate){
+	if(sDate == null) return "";
+	if(sDate.length != 10) return "";
 	sDate = sDate.substr(0, 10);
 	//Ext.Msg.alert(sDate);
 	var arr = sDate.split("-");
@@ -1915,8 +1929,6 @@ function setResultOldPerson(id){
 			if(Ext.util.JSON.decode(result.responseText).Records.length > 0){
 				//เลขบัตรประชาชน
 				text20.setValue(dat.pid);
-				//ระบุว่าเป็นข้อมูลอดีตข้าราชการ
-				hidOld.setValue("1");
 				
 				//คำนำหน้าชื่อ
 				combo20.getStore().load({
@@ -1945,6 +1957,18 @@ function setResultOldPerson(id){
 					},
 					callback :function(){
 						combo21.setValue(dat.j18code);
+					}
+				});
+				
+				//รักษาการในตำแหน่ง
+				combo22.getStore().load({
+					params: {
+						spexpos: dat.spexpos
+						,start: 0
+						,limit: 10
+					},
+					callback :function(){
+						combo22.setValue(dat.spexpos);
 					}
 				});
 				
@@ -2023,15 +2047,22 @@ function setResultOldPerson(id){
 				//กลุ่มเลือด
 				combo31.setValue(dat.bloodgroup);
 				//วันเกิด
-				date2.setValue(date_sql2thai(dat.birthdate)); date2_calculate(date2);
+				date2.setValue(date_sql2thai(dat.birthdate)); //date2_calculate(date2);
 				//วันบรรจุเข้ารับราชการ
-				date3.setValue(date_sql2thai(dat.appointdate)); date_x_calculate(date3, text27);
+				date3.setValue(date_sql2thai(dat.appointdate)); //date_x_calculate(date3, text27);
 				//วันเข้าสู่หน่วยงานปัจจุบัน
-				date5.setValue(date_sql2thai(dat.deptdate)); date_x_calculate(date5, text29);
-				//วันที่ออกจากราชการ
-				date7.setValue(date_sql2thai(dat.exitdate));
+				date5.setValue(date_sql2thai(dat.deptdate)); //date_x_calculate(date5, text29);
 				//วันเข้าสู่ระดับปัจจุบัน
-				date8.setValue(date_sql2thai(dat.cdate)); date_x_calculate(date8, text30);
+				date8.setValue(date_sql2thai(dat.cdate)); //date_x_calculate(date8, text30);
+				
+				//วันที่รับโอน
+				date4.setValue(date_sql2thai(dat.getindate));
+				//วันที่บรรจุกลับ
+				date6.setValue(date_sql2thai(dat.reentrydate));
+				//วันที่ออกจากราชการ
+				date7.setValue(date_sql2thai(dat.quitdate));
+				//วันที่มาช่วยราชการ
+				date9.setValue(date_sql2thai(dat.attenddate)); //date_x_calculate(date9, text31);
 				
 				//วุฒิในตำแหน่ง
 				combo32.getStore().load({
@@ -2067,9 +2098,9 @@ function setResultOldPerson(id){
 				//ความสามารถพิเศษ
 				text32.setValue(dat.specialty);
 				//หมายเหตุ1
-				text33.setValue(dat.note);
+				//text33.setValue(dat.note);
 				//หมายเหตุ2
-				text34.setValue(dat.note2);
+				//text34.setValue(dat.note2);
 				
 				date1_auto_fill();
 				
@@ -2111,6 +2142,7 @@ var GridOldPerson = new Ext.grid.GridPanel({
 	listeners: {
 		rowdblclick: function( me, rowIndex, e ){
 			setResultOldPerson(me.selModel.selections.items[0].data.pispersonel_id);
+			hidOld.setValue("1"); //อดีตข้าราชการ
 		}
 	},
 	tbar: [
@@ -2187,6 +2219,7 @@ var winOldPerson = new Ext.Window({
 				click: function(){
 					if( GridOldPerson.selModel.selections.items.length != 0 ){
 						setResultOldPerson(GridOldPerson.selModel.selections.items[0].data.pispersonel_id);
+						hidOld.setValue("1"); //อดีตข้าราชการ
 					} else {
 						Ext.Msg.alert("Error", "กรุณาคลิกเลือกรายชื่ออดีตข้าราชการ");
 					}
@@ -2394,6 +2427,10 @@ function save_data(){
 		,success: function(response,opts){
 			obj = Ext.util.JSON.decode(response.responseText);
 			var pispersonel_id = obj.dat;
+			if(pispersonel_id == ""){
+				Ext.Msg.alert("pispersonel_id=null");
+				return;
+			}
 			Ext.Ajax.request({
 				method: 'post',
 				url: pre_url+'/cmd1/age_valid',
@@ -2411,13 +2448,19 @@ function save_data(){
 						});
 						return;
 					} else {
-						//Ext.Msg.alert('อายุ '+dat.age_year+' ถูกต้อง');
+						
+						if(hidOld.getValue() == ""){
+							saveUrl = pre_url+'/cmd1/save_new';
+						} else {
+							saveUrl = pre_url+'/cmd1/save_edit';
+						}
+						
 						//อ่านค่าของ สมาชิก กบข
 						var kbk = RadioGroupGetValue(radio1);
 						if(kbk == "2") kbk = "0";
 						Ext.Ajax.request({
 							method: 'post',
-							url: pre_url+'/cmd1/save_new',
+							url: saveUrl,
 							params: {
 								id: pispersonel_id,
 								pcode: combo20.getValue(), //คำนำหน้าชื่อ
@@ -2442,6 +2485,7 @@ function save_data(){
 								c: combo8.getValue(), //กลุ่ม/ระดับ
 								salary: text5.getValue(), //เงินเดือน
 								j18code: combo21.getValue(), //ปฏิบัติงานจริง
+								spexpos: combo22.getValue(), //รักษาการในตำแหน่ง
 								note: text33.getValue(), //หมายเหตุ1
 								upddate: '', //วันที่บันทึก เดี๋ยวให้ทาง postgres บันทึกเวลาเอง
 								upduser: 'admin', //user ที่บันทึก
@@ -2454,6 +2498,25 @@ function save_data(){
 								note2: text34.getValue(), //หมายเหตุ2
 								specialty: text32.getValue(), //ความสามารถพิเศษ
 								bloodgroup: combo31.getValue(), //กลุ่มเลือด
+								
+								getindate: date4.getValue(), //วันที่รับโอน
+								reentrydate: date6.getValue(), //วันที่บรรจุกลับ
+								quitdate: date7.getValue(), //วันที่ออกจากราชการ
+								attenddate: date9.getValue(), //วันที่มาช่วยราชการ
+								
+								combo2: combo2.getValue(),
+								combo3: combo3.getValue(),
+								combo4: combo4.getValue(),
+								combo5: combo5.getValue(),
+								combo6: combo6.getValue(),
+								combo7: combo7.getValue(),
+								combo8: combo8.getValue(),
+								combo9: combo9.getValue(),
+								combo10: combo10.getValue(),
+								combo11: combo11.getValue(),
+								combo12: combo12.getValue(),
+								combo13: combo13.getValue(),
+								text6: text6.getValue(),
 								
 								updcode: combo1.getValue(), //การเคลื่อนไหว
 								refcmnd: text1.getValue(), //คำสั่ง

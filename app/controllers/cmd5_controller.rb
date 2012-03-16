@@ -190,17 +190,8 @@ class Cmd5Controller < ApplicationController
         begin
             Pisposhis.transaction do                
                 
-                #กำหนดให้เป็นตำแหน่งว่าง
-                sql = "update pisj18 set id='', upddate=now(), upduser='#{upduser}'"
-                #หากติ๊กเช็คบ๊อกซ์ ตัดโอนตำแหน่งและอัตราเงินเดือน
-                if chk == "true"
-                    sql += ", flagupdate='0'"
-                end
-                sql += " where posid=#{posid}"
-                rs = Pisj18.find_by_sql(sql)
-                
                 #กำหนดสถานะบุคคลให้เป็นอดีตราชการ และเอาวันที่มีผลบังคับใช้ มาใส่เป็นวันที่ออกจากราชการด้วย
-                sql = "update pispersonel set pstatus='0', exitdate='#{forcedate}', upddate=now(), upduser='#{upduser}' where id='#{id}'"
+                sql = "update pispersonel set pstatus='0', exitdate='#{forcedate}', quitdate='#{forcedate}', upddate=now(), upduser='#{upduser}' where id='#{id}'"
                 rs = Pispersonel.find_by_sql(sql)
         
                 #เพิ่มเรคอร์ดประวัติ
@@ -224,9 +215,72 @@ class Cmd5Controller < ApplicationController
                 rs3.refcmnd = refcmnd
                 rs3.ptcode = ptcode
                 rs3.note = note
-                #rs3.update = ''
                 rs3.upduser = upduser
                 rs3.save!
+                
+                if poscode == ""
+                    poscode = "null"
+                end
+                if excode == ""
+                    excode = "null"
+                end
+                if c == ""
+                    c = "null"
+                end
+                if epcode == ""
+                    epcode = "null"
+                end
+                if ptcode == ""
+                    ptcode = "null"
+                end
+                if salary == ""
+                    salary = "null"
+                end
+                if mincode == ""
+                    mincode = "null"
+                end
+                if deptcode == ""
+                    deptcode = "null"
+                end
+                if dcode == ""
+                    dcode = "null"
+                end
+                if sdcode == ""
+                    sdcode = "null"
+                end
+                if seccode == ""
+                    seccode = "null"
+                end
+                if jobcode == ""
+                    jobcode = "null"
+                end
+                
+                #กำหนดให้เป็นตำแหน่งว่าง และอัพเดต pisj18 ด้วย
+                sql = "update pisj18 set
+                    id='',
+                    emptydate='#{forcedate}',
+                    upddate=now(),
+                    upduser='#{upduser}',
+                    poscode=#{poscode},
+                    excode=#{excode},
+                    c=#{c},
+                    epcode=#{epcode},
+                    ptcode=#{ptcode},
+                    salary=#{salary},
+                    mincode=#{mincode},
+                    deptcode=#{deptcode},
+                    dcode=#{dcode},
+                    sdcode=#{sdcode},
+                    seccode=#{seccode},
+                    jobcode=#{jobcode}
+                    "
+                #หากติ๊กเช็คบ๊อกซ์ ตัดโอนตำแหน่งและอัตราเงินเดือน
+                if chk == "true"
+                    sql += ", flagupdate='0'"
+                end
+                sql += " where posid=#{posid}"
+                rs = Pisj18.find_by_sql(sql)
+                
             end
             
             return_data = {}

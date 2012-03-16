@@ -230,6 +230,54 @@ class Cmd4Controller < ApplicationController
                 WHERE id='#{id}' AND historder=#{historder}"
                 
                 rs = Pisposhis.find_by_sql(sql)
+                
+                
+                #หากติ๊กเช็คบ๊อกซ์ ปรับปรุงข้อมูลตำแหน่ง จ.18
+                if chk1 == "true"
+                    sql = "UPDATE pisj18 SET
+                    poscode=#{poscode},
+                    c=#{c},
+                    salary=#{salary},
+                    nowc=#{c},
+                    nowsal=#{salary},
+                    ptcode=#{ptcode},
+                    excode=#{excode},
+                    epcode=#{epcode},
+                    mincode=#{mincode},
+                    deptcode=#{deptcode},
+                    dcode=#{dcode},
+                    sdcode=#{sdcode},
+                    seccode=#{seccode},
+                    jobcode=#{jobcode},
+                    upddate=now(),
+                    upduser='#{upduser}' 
+                    WHERE posid=#{posid}"
+                    
+                    rs = Pisj18.find_by_sql(sql)
+                end
+                
+                #หากติ๊กเช็คบ๊อกซ์ ปรับปรุงข้อมูลปฏิบัติราชการปัจจุบัน
+                if chk2 == "true"
+                    sql = "UPDATE pispersonel SET
+                    note='#{note}',
+                    poscode=#{poscode},
+                    c=#{c},
+                    salary=#{salary},
+                    ptcode=#{ptcode},
+                    excode=#{excode},
+                    epcode=#{epcode},
+                    mincode=#{mincode},
+                    deptcode=#{deptcode},
+                    dcode=#{dcode},
+                    sdcode=#{sdcode},
+                    seccode=#{seccode},
+                    jobcode=#{jobcode},
+                    upddate=now(),
+                    upduser='#{upduser}' 
+                    WHERE id='#{id}'"
+                    
+                    rs = Pispersonel.find_by_sql(sql)
+                end
             end
             
             return_data = {}

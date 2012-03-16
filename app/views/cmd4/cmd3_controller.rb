@@ -110,8 +110,8 @@ class Cmd3Controller < ApplicationController
         if posid == ""
             posid = 0
         end
-        sql = "SELECT pisj18.poscode, pisj18.excode, pisj18.c AS ccode, pisj18.epcode, pisj18.ptcode, pisj18.mincode, 
-            pisj18.deptcode, pisj18.dcode, pisj18.sdcode, pisj18.seccode, pisj18.jobcode, pisj18.salary,
+        sql = "SELECT pispersonel.poscode, pispersonel.excode, pispersonel.c AS ccode, pispersonel.epcode, pispersonel.ptcode, pispersonel.mincode, 
+            pispersonel.deptcode, pispersonel.dcode, pispersonel.sdcode, pispersonel.seccode, pispersonel.jobcode, pispersonel.salary,
             csubdept.shortpre || csubdept.subdeptname|| ' ' || camphur.shortpre || camphur.amname || ' ' || cprovince.shortpre || cprovince.provname AS fullsubdeptname,
             cprefix.prefix || pispersonel.fname || '  ' || pispersonel.lname as fullname, pispersonel.j18code, pispersonel.note
             FROM pisj18 
@@ -152,7 +152,7 @@ class Cmd3Controller < ApplicationController
     def save
         updcode = params[:updcode] #การเคลื่อนไหว
         refcmnd = params[:refcmnd] #คำสั่ง
-        forcedate = params[:forcedate][0,10].to_s #วันที่มีผลบังคับใช้
+        forcedate = params[:forcedate] #วันที่มีผลบังคับใช้
 
         posid = params[:posid] #เลขที่ตำแหน่ง
         
@@ -169,24 +169,12 @@ class Cmd3Controller < ApplicationController
         sdcode = params[:sdcode] #รหัสหน่วยงาน
         seccode = params[:seccode] #ฝ่าย /กลุ่มงาน
         jobcode = params[:jobcode] #งาน
-        fullname = params[:fullname] #ชื่อหน่วยงานแบบเต็ม
 
         note = params[:note] #หมายเหตุ
         
         upddate = params[:upddate] #วันที่บันทึก เดี๋ยวให้ทาง postgres บันทึกเวลาเอง
         upduser = params[:upduser] #user ที่บันทึก
         
-        sql = "select 
-            cdivision.prefix as aaa, cdivision.division as bbb, csection.shortname as ccc, csection.secname as ddd, cjob.jobname as eee
-            from pispersonel left join 
-            cdivision on pispersonel.dcode=cdivision.dcode left join 
-            csection on pispersonel.seccode=csection.seccode left join 
-            cjob on pispersonel.jobcode=cjob.jobcode 
-            where pispersonel.posid=#{posid} "
-        
-        rs = Pispersonel.find_by_sql(sql)
-        
-        note = "ไปปฏิบัติราชการ " + fullname + " " + rs[0].aaa + rs[0].bbb + " " + rs[0].ccc + rs[0].ddd + " งาน" + rs[0].eee + " ตั้งแต่ " + forcedate + " " + note
         
         #หา id ซึ่งเป็น id ของคน จากค่าของ posid
         sql = "select id as pispersonel_id from pisj18 where posid=#{posid}"
@@ -205,10 +193,7 @@ class Cmd3Controller < ApplicationController
             Pisposhis.transaction do
                 
                 #อัพเดตข้อมูลบุคคล
-                sql = "update pispersonel set note='#{note}', upddate=now(), upduser='#{upduser}'"
-                if j18code != ""
-                    sql += ", j18code=#{j18code}"
-                end
+                sql = "update pispersonel set note=note || ' #{note}', upddate=now(), upduser='#{upduser}'"
                 if poscode != ""
                     sql += ", poscode=#{poscode}"
                 end
