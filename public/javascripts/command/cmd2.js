@@ -1,43 +1,30 @@
 var pre_url = "";
 
-//---------------------------------------------------------------------------
-
-var txtCommandNumber = new Ext.form.TextField({
-	id: 'txtCommandNumber',
+var text1 = new Ext.form.TextField({
+	id: 'text1',
 	fieldLabel: 'เลขที่คำสั่ง',
-	width: 400
+	width: 400,
+	allowBlank: false
 });
 
-var dateForce = new Ext.form.DateField({
+var date1 = new Ext.form.DateField({
 	fieldLabel: 'วันที่คำสั่งมีผลบังคับ',
-	format: 'd/m/Y'
+	format: 'd/m/Y',
+	allowBlank: false
 });
 
-var cmbCodeUpdate = new Ext.form.ComboBox({
-	hiddenName: 'cmbCodeUpdate',
-	editable: true,
-	fieldLabel: 'การเคลื่อนไหว',
-	mode: 'local',
-	width: 685,
-	triggerAction: 'all',
-	valueField: 'updcode',
-	displayField: 'updname',
-	store: new Ext.data.Store({
-		url: '/code/cupdate',
-		autoLoad: true,
-		reader: new Ext.data.JsonReader({
-			root: 'Records',
-			fields: ['updcode', 'updname']
-		}),
-		listeners: {
-			load : function( Store, records, options ) {
-				
-			}
-		}
-	})
+var combo1 = new Ext.ux.form.PisComboBox({
+	fieldLabel: 'การเคลื่อนไหว'
+	,hiddenName: 'combo1'
+	,allowBlank: false
+	,width: 685
+	,valueField: 'updcode'
+	,displayField: 'updname'
+	,urlStore: pre_url + '/codetu/cupdate'
+	,fieldStore: ['updcode', 'updname']
 });
 
-var txtRemark = new Ext.form.TextField({
+var text6 = new Ext.form.TextField({
 	fieldLabel: 'หมายเหตุ',
 	width: 685
 });
@@ -70,26 +57,242 @@ var radio1 = new Ext.form.RadioGroup({
 	}]
 });
 
-var txtPosition = new Ext.form.NumberField({
+function text2_get_position(me){
+	Ext.Ajax.request({
+		method: 'post',
+		url: pre_url+'/cmd2/get_position',
+		params: {posid: me.getValue()},
+		success: function(result, request ) {
+			var x = me.getValue();
+			var dat = Ext.util.JSON.decode(result.responseText).Records[0];
+			if(Ext.util.JSON.decode(result.responseText).Records.length > 0){
+				text2.setValue(x);
+				//text3.setValue(x);
+				ttt = dat.fullname;
+				if(ttt == "") ttt = "ว่าง";
+				text8.setValue(ttt);
+				
+				//combo2.setValue(dat.poscode);
+				combo2.getStore().load({
+					params: {
+						poscode: dat.poscode
+						,start: 0
+						,limit: 10
+					},
+					callback :function(){
+						combo2.setValue(dat.poscode);
+					}
+				});
+				
+				//combo8.setValue(dat.ccode);
+				combo8.getStore().load({
+					params: {
+						ccode: dat.ccode
+						,start: 0
+						,limit: 10
+					},
+					callback :function(){
+						combo8.setValue(dat.ccode);
+					}
+				});
+				
+				//เงินเดือน
+				text5.setValue(dat.salary);
+				
+				//combo3.setValue(dat.excode);
+				combo3.getStore().load({
+					params: {
+						excode: dat.excode
+						,start: 0
+						,limit: 10
+					},
+					callback :function(){
+						combo3.setValue(dat.excode);
+					}
+				});
+				
+				//combo9.setValue(dat.epcode);
+				combo9.getStore().load({
+					params: {
+						epcode: dat.epcode
+						,start: 0
+						,limit: 10
+					},
+					callback :function(){
+						combo9.setValue(dat.epcode);
+					}
+				});
+				
+				//combo13.setValue(dat.ptcode);
+				combo13.getStore().load({
+					params: {
+						ptcode: dat.ptcode
+						,start: 0
+						,limit: 10
+					},
+					callback :function(){
+						combo13.setValue(dat.ptcode);
+					}
+				});
+				
+				//combo4.setValue(dat.mincode);
+				/*combo4.getStore().load({
+					params: {
+						mcode: dat.mincode
+						,start: 0
+						,limit: 10
+					},
+					callback :function(){
+						combo4.setValue(dat.mincode);
+					}
+				});*/
+				
+				//combo5.setValue(dat.deptcode);
+				/*combo5.getStore().load({
+					params: {
+						deptcode: dat.deptcode
+						,start: 0
+						,limit: 10
+					},
+					callback :function(){
+						combo5.setValue(dat.deptcode);
+					}
+				});*/
+				
+				//combo10.setValue(dat.dcode);
+				combo10.getStore().load({
+					params: {
+						dcode: dat.dcode
+						,start: 0
+						,limit: 10
+					},
+					callback :function(){
+						combo10.setValue(dat.dcode);
+					}
+				});
+				
+				text4.setValue(dat.sdcode);
+				text7.setValue(dat.fullsubdeptname);
+				
+				//combo11.setValue(dat.seccode);
+				combo11.getStore().load({
+					params: {
+						seccode: dat.seccode
+						,start: 0
+						,limit: 10
+					},
+					callback :function(){
+						combo11.setValue(dat.seccode);
+					}
+				});
+				
+				//combo7.setValue(dat.jobcode);
+				combo7.getStore().load({
+					params: {
+						jobcode: dat.jobcode
+						,start: 0
+						,limit: 10
+					},
+					callback :function(){
+						combo7.setValue(dat.jobcode);
+					}
+				});
+				
+				combo6.setValue("");
+				//combo12.setValue("");
+			} else {
+				Ext.Msg.show({
+					title:'ไม่พบข้อมูล',
+					msg: 'เลขที่ตำแหน่งนี้จะต้องเป็นตำแหน่งที่มีคนครองอยู่เท่านั้น',
+					buttons: Ext.Msg.OK,
+					fn: function(){},
+					icon: Ext.MessageBox.ERROR
+				});
+				//ก่อนจะรีเซตฟอร์ม ต้องสำรองข้อมูลใน การเคลื่อนไหว, คำสั่ง และ วันที่มีผลบังคับใช้ เอาไว้ก่อน
+				a = combo1.getValue();
+				b = text1.getValue();
+				c = date1.getValue();
+				frmAddEdit.getForm().reset();
+				combo1.setValue(a);
+				text1.setValue(b);
+				if(c != ""){
+					c = c.format("d")+"/"+c.format("m")+"/"+ (Number(c.format("Y"))+543).toString();
+					date1.setValue(c);
+				}
+			}
+		}
+	});
+}
+
+var text2 = new Ext.form.NumberField({
+	id: 'text2',
 	fieldLabel: 'เลขที่ตำแหน่ง',
 	width: 120,
+	allowBlank: false,
+	enableKeyEvents: true,
+	listeners: {
+		keypress: function( me, e ){
+			if(e.keyCode == e.ENTER){
+				text2_get_position(me);
+			}
+		},
+		change: function( me, newValue, oldValue ){
+			if(me.getValue() != ""){
+				text2_get_position(me);
+			}
+		}
+	}
+});
+
+var hid_id = new Ext.form.Hidden({
+	id: 'hid_id'
+});
+
+var text3 = new Ext.form.NumberField({
+	fieldLabel: 'เลขที่ตำแหน่ง',
+	width: 120,
+	allowBlank: false,
 	enableKeyEvents: true,
 	listeners: {
 		keypress: function( me, e ){
 			if(e.keyCode == e.ENTER){
 				Ext.Ajax.request({
 					method: 'post',
-					url: 'cmd2_get_olddata.php',
+					url: pre_url+'/cmd2/get_olddata',
 					params: {posid: me.getValue()},
 					success: function(result, request ) {
 						var x = me.getValue();
+						//frmAddEdit.getForm().reset();
 						var dat = Ext.util.JSON.decode(result.responseText).Records[0];
+						var dat2 = Ext.util.JSON.decode(result.responseText).Records2[0];
+						
 						if(Ext.util.JSON.decode(result.responseText).Records.length > 0){
-							txtPosition.setValue(x);
-							text8.setValue(dat.fname+" "+dat.lname);
-							cmbPosition.setValue(dat.poscode);
-							cmbGrouplevel.setValue(dat.ccode);
-							txtSalary.setValue(dat.salary);
+							text3.setValue(x);
+							hid_id.setValue(dat.id);
+							text21.setValue(dat.fullname);
+							text22.setValue(dat.posname);
+							text23.setValue(dat.cname);
+							text24.setValue(dat.salary);
+							text25.setValue(dat.exname);
+							text26.setValue(dat.expert);
+							text27.setValue(dat.ptname);
+							text28.setValue(dat.division);
+							text29.setValue(dat.fullsubdeptname);
+							text30.setValue(dat.subsdname);
+							text31.setValue(dat.secname);
+							text32.setValue(dat.jobname);
+							
+							text2.setValue(text3.getValue());
+							text2_get_position(text2);
+							
+							combo14.setValue(dat2.j18code);
+							text42.setValue(dat2.deptname);
+							text43.setValue(dat2.division);
+							text44.setValue(dat2.fullsubdeptname);
+							text45.setValue(dat2.subsdname);
+							text46.setValue(dat2.secname);
+							text47.setValue(dat2.jobname);
+							//text48.setValue(dat2.fullname);
 						} else {
 							Ext.Msg.alert("Error","ไม่พบข้อมูลตำแหน่ง");
 						}
@@ -100,53 +303,55 @@ var txtPosition = new Ext.form.NumberField({
 	}
 });
 
-var txtPositionOld = new Ext.form.NumberField({
-	fieldLabel: 'เลขที่ตำแหน่ง',
-	width: 120,
-	enableKeyEvents: true,
-	listeners: {
-		keypress: function( me, e ){
-			if(e.keyCode == e.ENTER){
-				Ext.Ajax.request({
-					method: 'post',
-					url: 'cmd2_get_olddata.php',
-					params: {posid: me.getValue()},
-					success: function(result, request ) {
-						var x = me.getValue();
-						frmAddEdit.getForm().reset();
-						var dat = Ext.util.JSON.decode(result.responseText).Records[0];
-						if(Ext.util.JSON.decode(result.responseText).Records.length > 0){
-							txtPositionOld.setValue(x);
-							text21.setValue(dat.fname+" "+dat.lname);
-							text22.setValue(dat.longpre+" "+dat.posname);
-							text23.setValue(dat.cname);
-							text24.setValue(dat.salary);
-							
-							txtPosition.setValue(txtPositionOld.getValue());
-							text8.setValue(dat.fname+" "+dat.lname);
-							cmbPosition.setValue(dat.poscode);
-							cmbGrouplevel.setValue(dat.ccode);
-							txtSalary.setValue(dat.salary);
-						} else {
-							Ext.Msg.alert("Error","ไม่พบข้อมูลตำแหน่ง");
-						}
-					}
-				});	
+function text4_query(id){
+	if(id != ""){
+		Ext.Ajax.request({
+			method: 'post',
+			url: pre_url+'/cmd2/get_place',
+			params: {id: id},
+			success: function(result, request ) {
+				var dat = Ext.util.JSON.decode(result.responseText).Records;
+				if(dat.length == 0){
+					text7.setValue('');
+					Ext.Msg.show({
+						title:'ไม่พบข้อมูล',
+						msg: 'ไม่พบข้อมูลหน่วยงานที่ค้นหา',
+						buttons: Ext.Msg.OK,
+						fn: function(){},
+						animEl: 'text4',
+						icon: Ext.MessageBox.ERROR
+					});
+				} else {
+					text7.setValue(dat[0].fullsubdeptname);
+				}
 			}
-		}
+		});
 	}
-});
+}
 
 var text4 = new Ext.form.NumberField({
 	id: 'text4',
-	fieldLabel: 'ชื่อหน่วยงาน',
-	width: 100
+	fieldLabel: 'หน่วยงาน',
+	width: 100,
+	allowBlank: false,
+	enableKeyEvents: true,
+	listeners: {
+		keypress: function( me, e ){
+			if(e.keyCode == e.ENTER){
+				text4_query(me.getValue());
+			}
+		},
+		change: function( me, newValue, oldValue ){
+			text4_query(me.getValue());
+		}
+	}
 });
 
-var txtSalary = new Ext.form.NumberField({
-	id: 'txtSalary',
+var text5 = new Ext.form.NumberField({
+	id: 'text5',
 	fieldLabel: 'เงินเดือน',
-	width: 120
+	width: 120,
+	allowBlank: false
 });
 
 
@@ -378,139 +583,67 @@ var text48 = new Ext.form.TextField({
 var button1 = new Ext.Button({
 	id: 'button1',
 	iconCls: 'zoom',
-	text: ''
-});
-
-var button2 = new Ext.Button({
-	id: 'button2',
-	iconCls: 'zoom',
-	text: ''
-});
-
-
-
-var cmbPosition = new Ext.form.ComboBox({
-	hiddenName: 'cmbPosition',
-	editable: true,
-	fieldLabel: 'ตำแหน่งสายงาน',
-	mode: 'local',
-	width: 350,
-	triggerAction: 'all',
-	valueField: 'poscode',
-	displayField: 'posname',
-	store: new Ext.data.Store({
-		url: '/code/cposition',
-		autoLoad: true,
-		reader: new Ext.data.JsonReader({
-			root: 'Records',
-			fields: ['poscode', 'posname']
-		}),
-		listeners: {
-			load : function( Store, records, options ) {
-				
-			}
+	text: '',
+	tooltip: 'ค้นหาหน่วยงาน',
+	listeners: {
+		click: function(){
+			winPlace.show();
 		}
-	})
+	}
 });
 
-var cmbExecutive = new Ext.form.ComboBox({
-	hiddenName: 'cmbExecutive',
-	editable: true,
-	fieldLabel: 'ตำแหน่งบริหาร',
-	mode: 'local',
-	width: 350,
-	triggerAction: 'all',
-	valueField: 'excode',
-	displayField: 'exname',
-	store: new Ext.data.Store({
-		url: '/code/cexecutive',
-		autoLoad: true,
-		reader: new Ext.data.JsonReader({
-			root: 'Records',
-			fields: ['excode', 'exname']
-		}),
-		listeners: {
-			load : function( Store, records, options ) {
-				
-			}
-		}
-	})
+var combo2 = new Ext.ux.form.PisComboBox({
+	fieldLabel: 'ตำแหน่งสายงาน'
+	,hiddenName: 'combo2'
+	,width: 350
+	,valueField: 'poscode'
+	,displayField: 'posname'
+	,urlStore: pre_url + '/codetu/cposition'
+	,fieldStore: ['poscode', 'posname']
 });
 
-var cmbExpert = new Ext.form.ComboBox({
-	hiddenName: 'cmbExpert',
-	editable: true,
-	fieldLabel: 'ความเชี่ยวชาญ',
-	mode: 'local',
-	width: 350,
-	triggerAction: 'all',
-	valueField: 'epcode',
-	displayField: 'expert',
-	store: new Ext.data.Store({
-		url: '/code/cexpert',
-		autoLoad: true,
-		reader: new Ext.data.JsonReader({
-			root: 'Records',
-			fields: ['epcode', 'expert']
-		}),
-		listeners: {
-			load : function( Store, records, options ) {
-				
-			}
-		}
-	})
+var combo3 = new Ext.ux.form.PisComboBox({
+	fieldLabel: 'ตำแหน่งบริหาร'
+	,hiddenName: 'combo3'
+	,width: 350
+	,valueField: 'excode'
+	,displayField: 'exname'
+	,urlStore: pre_url + '/codetu/cexecutive'
+	,fieldStore: ['excode', 'exname']
 });
 
-var cmbPostype = new Ext.form.ComboBox({
-	hiddenName: 'cmbPostype',
-	editable: true,
-	fieldLabel: 'ว. / วช. /ชช.',
-	mode: 'local',
-	width: 350,
-	triggerAction: 'all',
-	valueField: 'ptcode',
-	displayField: 'ptname',
-	store: new Ext.data.Store({
-		url: '/code/cpostype',
-		autoLoad: true,
-		reader: new Ext.data.JsonReader({
-			root: 'Records',
-			fields: ['ptcode', 'ptname']
-		}),
-		listeners: {
-			load : function( Store, records, options ) {
-				
-			}
-		}
-	})
+var combo9 = new Ext.ux.form.PisComboBox({
+	fieldLabel: 'ความเชี่ยวชาญ'
+	,hiddenName: 'combo9'
+	,width: 350
+	,valueField: 'epcode'
+	,displayField: 'expert'
+	,urlStore: pre_url + '/codetu/cexpert'
+	,fieldStore: ['epcode', 'expert']
 });
 
-var cmbJob = new Ext.form.ComboBox({
-	hiddenName: 'cmbJob',
-	editable: true,
-	fieldLabel: 'งาน',
-	mode: 'local',
-	width: 350,
-	triggerAction: 'all',
-	valueField: 'jobcode',
-	displayField: 'jobname',
-	store: new Ext.data.Store({
-		url: '/code/cjob',
-		autoLoad: true,
-		reader: new Ext.data.JsonReader({
-			root: 'Records',
-			fields: ['jobcode', 'jobname']
-		}),
-		listeners: {
-			load : function( Store, records, options ) {
-				//combo28.setValue(combo28.getValue());
-			}
-		}
-	})
+var combo13 = new Ext.ux.form.PisComboBox({
+	fieldLabel: 'ว. / วช. /ชช.'
+	,hiddenName: 'combo13'
+	,width: 350
+	,valueField: 'ptcode'
+	,displayField: 'ptname'
+	,urlStore: pre_url + '/codetu/cpostype'
+	,fieldStore: ['ptcode', 'ptname']
 });
 
-var cmbJ18status = new Ext.form.ComboBox({
-	hiddenName: 'cmbJ18status',
+var combo7 = new Ext.ux.form.PisComboBox({
+	fieldLabel: 'งาน'
+	,hiddenName: 'combo7'
+	,width: 350
+	,valueField: 'jobcode'
+	,displayField: 'jobname'
+	,urlStore: pre_url + '/codetu/cjob'
+	,fieldStore: ['jobcode', 'jobname']
+});
+
+var combo14 = new Ext.form.ComboBox({
+	hiddenName: 'combo14',
 	editable: true,
 	fieldLabel: 'ปฏิบัติงานจริง',
 	mode: 'local',
@@ -519,7 +652,7 @@ var cmbJ18status = new Ext.form.ComboBox({
 	valueField: 'j18code',
 	displayField: 'j18status',
 	store: new Ext.data.Store({
-		url: '/code/cj18status',
+		url: pre_url+'/codetu/cj18status',
 		autoLoad: true,
 		reader: new Ext.data.JsonReader({
 			root: 'Records',
@@ -533,100 +666,44 @@ var cmbJ18status = new Ext.form.ComboBox({
 	})
 });
 
-var cmbDiv = new Ext.form.ComboBox({
-	hiddenName: 'cmbDiv',
-	editable: true,
-	fieldLabel: 'กอง',
-	mode: 'local',
-	width: 350,
-	triggerAction: 'all',
-	valueField: 'dcode',
-	displayField: 'division',
-	store: new Ext.data.Store({
-		url: '/code/cdivision',
-		autoLoad: true,
-		reader: new Ext.data.JsonReader({
-			root: 'Records',
-			fields: ['dcode', 'division']
-		}),
-		listeners: {
-			load : function( Store, records, options ) {
-				//combo10.setValue(combo10.getValue());
-			}
-		}
-	})
+var combo10 = new Ext.ux.form.PisComboBox({
+	fieldLabel: 'กอง'
+	,hiddenName: 'combo10'
+	,width: 350
+	,valueField: 'dcode'
+	,displayField: 'division'
+	,urlStore: pre_url + '/codetu/cdivision'
+	,fieldStore: ['dcode', 'division']
 });
 
-var cmbSectionG = new Ext.form.ComboBox({
-	hiddenName: 'cmbSectionG',
-	editable: true,
-	fieldLabel: 'กลุ่มภารกิจ',
-	mode: 'local',
-	width: 350,
-	triggerAction: 'all',
-	valueField: 'subsdcode',
-	displayField: 'subsdname',
-	store: new Ext.data.Store({
-		url: '/code/csubsdcode',
-		autoLoad: true,
-		reader: new Ext.data.JsonReader({
-			root: 'Records',
-			fields: ['subsdcode', 'subsdname']
-		}),
-		listeners: {
-			load : function( Store, records, options ) {
-				
-			}
-		}
-	})
+var combo6 = new Ext.ux.form.PisComboBox({
+	fieldLabel: 'กลุ่มภารกิจ'
+	,hiddenName: 'combo6'
+	,width: 350
+	,valueField: 'subsdcode'
+	,displayField: 'subsdname'
+	,urlStore: pre_url + '/codetu/csubsdcode'
+	,fieldStore: ['subsdcode', 'subsdname']
 });
 
-var cmbGrouplevel = new Ext.form.ComboBox({
-	hiddenName: 'cmbGrouplevel',
-	editable: true,
-	fieldLabel: 'ระดับ',
-	mode: 'local',
-	width: 350,
-	triggerAction: 'all',
-	valueField: 'ccode',
-	displayField: 'cname',
-	store: new Ext.data.Store({
-		url: '/code/cgrouplevel',
-		autoLoad: true,
-		reader: new Ext.data.JsonReader({
-			root: 'Records',
-			fields: ['ccode', 'cname']
-		}),
-		listeners: {
-			load : function( Store, records, options ) {
-				
-			}
-		}
-	})
+var combo8 = new Ext.ux.form.PisComboBox({
+	fieldLabel: 'ระดับ'
+	,hiddenName: 'combo8'
+	,width: 350
+	,valueField: 'ccode'
+	,displayField: 'cname'
+	,urlStore: pre_url + '/codetu/cgrouplevel'
+	,fieldStore: ['ccode', 'cname']
 });
 
-var cmbSection = new Ext.form.ComboBox({
-	hiddenName: 'cmbSection',
-	editable: true,
-	fieldLabel: 'ฝ่าย / กลุ่มงาน',
-	mode: 'local',
-	width: 350,
-	triggerAction: 'all',
-	valueField: 'seccode',
-	displayField: 'secname',
-	store: new Ext.data.Store({
-		url: '/code/csection',
-		autoLoad: true,
-		reader: new Ext.data.JsonReader({
-			root: 'Records',
-			fields: ['seccode', 'secname']
-		}),
-		listeners: {
-			load : function( Store, records, options ) {
-				//combo11.setValue(combo11.getValue());
-			}
-		}
-	})
+var combo11 = new Ext.ux.form.PisComboBox({
+	fieldLabel: 'ฝ่าย / กลุ่มงาน'
+	,hiddenName: 'combo11'
+	,width: 350
+	,valueField: 'seccode'
+	,displayField: 'secname'
+	,urlStore: pre_url + '/codetu/csection'
+	,fieldStore: ['seccode', 'secname']
 });
 
 var fieldset1 = new Ext.form.FieldSet({
@@ -638,7 +715,7 @@ var fieldset1 = new Ext.form.FieldSet({
 			items: [
 				{
 					layout: 'form',
-					items: [txtPosition]
+					items: [text2]
 				}
 			]
 		},
@@ -656,7 +733,7 @@ var fieldset1 = new Ext.form.FieldSet({
 			items: [
 				{
 					layout: 'form',
-					items: [cmbPosition]
+					items: [combo2]
 				}
 			]
 		},{
@@ -664,7 +741,7 @@ var fieldset1 = new Ext.form.FieldSet({
 			items: [
 				{
 					layout: 'form',
-					items: [cmbGrouplevel]
+					items: [combo8]
 				}
 			]
 		},
@@ -673,7 +750,7 @@ var fieldset1 = new Ext.form.FieldSet({
 			items: [
 				{
 					layout: 'form',
-					items: [txtSalary]
+					items: [text5]
 				}
 			]
 		},
@@ -682,7 +759,7 @@ var fieldset1 = new Ext.form.FieldSet({
 			items: [
 				{
 					layout: 'form',
-					items: [cmbExecutive]
+					items: [combo3]
 				}
 			]
 		},
@@ -691,7 +768,7 @@ var fieldset1 = new Ext.form.FieldSet({
 			items: [
 				{
 					layout: 'form',
-					items: [cmbExpert]
+					items: [combo9]
 				}
 			]
 		},
@@ -700,7 +777,7 @@ var fieldset1 = new Ext.form.FieldSet({
 			items: [
 				{
 					layout: 'form',
-					items: [cmbPostype]
+					items: [combo13]
 				}
 			]
 		},
@@ -709,7 +786,7 @@ var fieldset1 = new Ext.form.FieldSet({
 			items: [
 				{
 					layout: 'form',
-					items: [cmbDiv]
+					items: [combo10]
 				}
 			]
 		},
@@ -726,7 +803,7 @@ var fieldset1 = new Ext.form.FieldSet({
 				},
 				{
 					layout: 'form',
-					items: [button2]
+					items: [button1]
 				}
 			]
 		},
@@ -735,7 +812,7 @@ var fieldset1 = new Ext.form.FieldSet({
 			items: [
 				{
 					layout: 'form',
-					items: [cmbSectionG]
+					items: [combo6]
 				}
 			]
 		},
@@ -744,7 +821,7 @@ var fieldset1 = new Ext.form.FieldSet({
 			items: [
 				{
 					layout: 'form',
-					items: [cmbSection]
+					items: [combo11]
 				}
 			]
 		},
@@ -753,7 +830,7 @@ var fieldset1 = new Ext.form.FieldSet({
 			items: [
 				{
 					layout: 'form',
-					items: [cmbJob]
+					items: [combo7]
 				}
 			]
 		}
@@ -769,7 +846,7 @@ var fieldset2 = new Ext.form.FieldSet({
 			items: [
 				{
 					layout: 'form',
-					items: [txtPositionOld]
+					items: [text3]
 				}
 			]
 		},
@@ -893,7 +970,7 @@ var fieldset3 = new Ext.form.FieldSet({
 			items: [
 				{
 					layout: 'form',
-					items: [cmbJ18status]
+					items: [combo14]
 				},{
 					layout: 'form',
 					items: [text40],
@@ -968,16 +1045,16 @@ var frmAddEdit = new Ext.form.FormPanel({
 			items: [
 				{
 					layout: 'form',
-					items: [txtCommandNumber]
+					items: [text1]
 				},{
 					layout: 'form',
 					style: 'padding-left: 20px',
-					items: [dateForce]
+					items: [date1]
 				}
 			]
 		},
-		cmbCodeUpdate,
-		txtRemark,
+		combo1,
+		text6,
 		radio1,
 		{
 			layout: 'column',
@@ -1001,7 +1078,7 @@ var frmAddEdit = new Ext.form.FormPanel({
 			formBind: true,
 			listeners: {
 				click: function(){
-					
+					save_data();
 				}
 			}
 		},
@@ -1017,11 +1094,251 @@ var frmAddEdit = new Ext.form.FormPanel({
 	]
 });
 
-var viewport = new Ext.Viewport({
+/*var viewport = new Ext.Viewport({
 	layout: 'border',
 	renderTo: Ext.getBody(),
 	//autoScroll: true,
 	items: [
 		frmAddEdit
 	]
+});*/
+
+//------------------------------------------------------------------------------
+function funcSearchPlace(){
+	GridStorePlace.baseParams = {
+		provcode: cmbSearchPlace.getValue(),
+		query: txtSearchPlace.getValue()
+	};
+	GridStorePlace.load({
+		params:{
+			start: 0,
+			limit: 100
+		}
+	});
+}
+
+var cmbSearchPlace = new Ext.form.ComboBox({
+	hiddenName: 'cmbSearchPlace',
+	editable: true,
+	mode: 'local',
+	width: 150,
+	triggerAction: 'all',
+	valueField: 'provcode',
+	displayField: 'provname',
+	store: new Ext.data.Store({
+		url: pre_url+'/codetu/cprovince',
+		autoLoad: true,
+		reader: new Ext.data.JsonReader({
+			root: 'Records',
+			fields: ['provcode', 'provname']
+		})
+	}),
+	listeners: {
+		select : function( me, record, index ) {
+			if(me.getValue() != ""){
+				funcSearchPlace();
+			}
+		}
+	}
 });
+
+var txtSearchPlace = new Ext.form.TextField({
+	id: 'txtSearchPlace',
+	width: 200,
+	enableKeyEvents: true,
+	listeners: {
+		keypress: function( me, e ){
+			if(e.keyCode == e.ENTER){
+				funcSearchPlace();
+			}
+		}
+	}
+});
+
+var btnSearchPlace = new Ext.Button({
+	id: 'btnSearchPlace',
+	iconCls: 'zoom',
+	text: '',
+	listeners: {
+		click: function(){
+			funcSearchPlace();
+		}
+	}
+});
+
+var GridStorePlace = new Ext.data.JsonStore({
+	url: pre_url+'/cmd2/list_place_dialog',
+	root: 'Records',
+	totalProperty: 'totalCount',
+	idProperty: 'sdcode',
+	fields: [
+		"sdcode",
+		"fullsubdeptname"
+	]
+});
+
+function setResultPlace(){
+	text4.setValue(GridPlace.selModel.selections.items[0].data.sdcode);
+	text7.setValue(GridPlace.selModel.selections.items[0].data.fullsubdeptname);
+	//text4_selected();
+	winPlace.hide();
+}
+
+var GridPlace = new Ext.grid.GridPanel({
+	title: '',
+	frame: false,
+	stripeRows: true,
+	store: GridStorePlace,
+	viewConfig: {forceFit: true},
+	loadMask: {
+		msg: 'Please wait...'
+	},
+	columns: [
+		new Ext.grid.RowNumberer(),
+		{header: "รหัสหน่วยงาน",dataIndex: 'sdcode', width: 2, sortable: true},
+		{header: "ชื่อหน่วยงาน",dataIndex: 'fullsubdeptname', width: 10, sortable: true}
+	],
+	listeners: {
+		rowdblclick: function( me, rowIndex, e ){
+			setResultPlace();
+		}
+	},
+	tbar: [
+		'จังหวัด : ',
+		cmbSearchPlace,
+		'คำค้นหาชื่อหน่วยงาน : ',
+		txtSearchPlace,
+		btnSearchPlace
+	],
+	bbar: new Ext.PagingToolbar({
+		store: GridStorePlace,
+		pageSize: 100,
+		displayInfo: true,
+		displayMsg: 'รายการที่ {0} - {1} จากทั้งหมด {2}',
+		emptyMsg: "ไม่มีข้อมูล"
+	})
+});
+
+var winPlace = new Ext.Window({
+	title: 'ค้นหาหน่วยงาน',
+	iconCls: 'book-open',
+	applyTo: 'div_window_place',
+	layout: 'fit',
+	width: 550,
+	height: 450,
+	autoScroll: true,
+	closeAction: 'hide',
+	modal: true,
+	showAnimDuration: 0.5,
+	hideAnimDuration: 0.5,
+	items: [
+		GridPlace
+	],
+	buttons: [{
+			text: 'ตกลง',
+			iconCls: 'accept',
+			formBind: true,
+			listeners: {
+				click: function(){
+					if( GridPlace.selModel.selections.items.length != 0 ){
+						setResultPlace();
+					} else {
+						Ext.Msg.alert("Error", "กรุณาคลิกเลือกชื่อหน่วยงานที่ต้องการ");
+					}
+				}
+			}
+		},{
+			text: 'ยกเลิก',
+			iconCls: 'arrow-undo',
+			listeners: {
+				click: function(){
+					winPlace.hide();
+				}
+			}
+		}
+	]
+});
+
+function save_data(){
+	Ext.Ajax.request({
+		method: 'post',
+		url: pre_url+'/cmd2/save',
+		params: {
+			posid_old: text3.getValue(), //ตำแหน่งเก่า
+			hid_id: hid_id.getValue(), //รหัสของคนเก่า
+			
+			updcode: combo1.getValue(), //การเคลื่อนไหว
+			refcmnd: text1.getValue(), //คำสั่ง
+			forcedate: date1.getValue(), //วันที่มีผลบังคับใช้
+
+			posid: text2.getValue(), //เลขที่ตำแหน่ง
+			
+			j18code: combo14.getValue(), //ปฏิบัติงานตรง จ.18
+			poscode: combo2.getValue(), //ตำแหน่งสายงาน
+			c: combo8.getValue(), //ระดับ
+			salary: text5.getValue(), //เงินเดือน
+			excode: combo3.getValue(), //ตำแหน่งบริหาร
+			epcode: combo9.getValue(), //ความเชี่ยวชาญ
+			ptcode: combo13.getValue(), //ว./วช./ชช.
+			//mincode: combo4.getValue(), //กระทรวง
+			//deptcode: combo5.getValue(), //กรม
+			dcode: combo10.getValue(), //กอง
+			sdcode: text4.getValue(), //รหัสหน่วยงาน
+			seccode: combo11.getValue(), //ฝ่าย /กลุ่มงาน
+			jobcode: combo7.getValue(), //งาน
+			fullname: text7.getValue(),
+			subdcode: combo6.getValue(), //กลุ่มภารกิจ
+
+			//note: 'ไปปฏิบัติราชการ '+text7.getValue()+' '+text6.getValue(), //หมายเหตุ
+			note: text6.getValue(), //หมายเหตุ
+			
+			upddate: '', //วันที่บันทึก เดี๋ยวให้ทาง postgres บันทึกเวลาเอง
+			upduser: 'admin' //user ที่บันทึก
+		},
+		success: function(result, request ) {
+			obj = Ext.util.JSON.decode(result.responseText);
+			//debugger;
+			if( obj.success == true){
+				Ext.Msg.show({
+					title:'Complete',
+					msg: 'บันทึกข้อมูลเสร็จแล้ว',
+					buttons: Ext.Msg.OK,
+					fn: function(){
+						//ก่อนจะรีเซตฟอร์ม ต้องสำรองข้อมูลใน การเคลื่อนไหว, คำสั่ง และ วันที่มีผลบังคับใช้ เอาไว้ก่อน
+						a = combo1.getValue();
+						b = text1.getValue();
+						c = date1.getValue();
+						frmAddEdit.getForm().reset();
+						//การเคลื่อนไหว
+						combo1.getStore().load({
+							params: {
+								updcode: a
+								,start: 0
+								,limit: 10
+							},
+							callback :function(){
+								combo1.setValue(a);
+							}
+						});
+						text1.setValue(b);
+						if(c != ""){
+							c = c.format("d")+"/"+c.format("m")+"/"+ (Number(c.format("Y"))+543).toString();
+							date1.setValue(c);
+						}
+					},
+					animEl: 'text1',
+					icon: Ext.MessageBox.INFO
+				});
+			} else {
+				Ext.Msg.show({
+					title:'Error',
+					msg: 'เกิดข้อผิดพลาดในการบันทึก',
+					buttons: Ext.Msg.OK,
+					fn: function(){},
+					animEl: 'text1',
+					icon: Ext.MessageBox.ERROR
+				});
+			}
+		}
+	});
+}

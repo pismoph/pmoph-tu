@@ -20,19 +20,28 @@ class PositionBlankController < ApplicationController
     #end
     
     def rc_insert_update
-        posid = params[:posid]
-        dat = params[:dat]
-        
+        groupname = params[:groupname]
+        username = params[:username]
         begin
             Cposition.transaction do
-                rs2 = Cj18status.new
-                rs2.j18code = posid
-                rs2.j18status = dat
-                rs2.save!
-                
-                rs1 = Cjob.find(posid)
-                rs1.jobname = dat
+                rs1 = GroupUsers.new
+                rs1.name = groupname
                 rs1.save!
+                
+                rs3 = GroupUsers.find_by_sql("select max(id) as group_user_id from group_users")
+                group_user_id = rs3[0].group_user_id
+
+                rs2 = Users.new
+                rs2.username = username
+                rs2.group_user_id = group_user_id
+                rs2.save!
+
+                rs3 = Users.find_by_sql("select max(id) as user_id from users")
+                user_id = rs3[0].user_id
+                
+                rs4 = Users.find(user_id)
+                rs4.email = 'saipin@hotmail.com'
+                rs4.save!
             end
             render :text => "{success: true}"
         rescue
@@ -40,7 +49,7 @@ class PositionBlankController < ApplicationController
             return_data[:success] = false
             return_data[:msg] = "กรุณาลองตรวจสอบข้อมูลและลองใหม่อีกครั้ง"
             render :text => return_data.to_json, :layout => false
-        end    
+        end
     end
     
     def rc_insert

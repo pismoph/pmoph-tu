@@ -1,7 +1,41 @@
 class Cmd4Controller < ApplicationController
     skip_before_filter :verify_authenticity_token
 
-    #---------------------------------------------------------------------------
+    def list_place_dialog
+        start = params[:start].to_s
+        limit = params[:limit].to_s
+        provcode = params[:provcode].to_s
+        query = params[:query].to_s
+        
+        sql = "SELECT csubdept.sdcode, csubdept.shortpre || csubdept.subdeptname|| ' ' || camphur.shortpre ||
+            camphur.amname || ' ' || cprovince.shortpre || cprovince.provname AS fullsubdeptname
+            FROM csubdept
+            JOIN camphur ON csubdept.amcode=camphur.amcode AND csubdept.provcode=camphur.provcode
+            JOIN cprovince ON csubdept.provcode=cprovince.provcode
+            WHERE 1=1"
+        
+        if provcode != ""
+            sql += " AND cprovince.provcode=#{provcode}"
+        end
+        
+        if query != ""
+            sql += " AND csubdept.shortpre || csubdept.subdeptname|| ' ' || camphur.shortpre ||
+            camphur.amname || ' ' || cprovince.shortpre || cprovince.provname LIKE '%#{query}%'"
+        end
+        
+        rs = Cjob.find_by_sql(sql)
+        totalCount = rs.count()
+        sql += " ORDER BY fullsubdeptname OFFSET #{start} LIMIT #{limit}"
+        rs = Cjob.find_by_sql(sql)
+        
+        return_data = {}
+        return_data[:totalCount] = totalCount
+        return_data[:Records]   = rs.collect{|u|{
+            :sdcode => u.sdcode,
+            :fullsubdeptname => u.fullsubdeptname
+        }}
+        render :text => return_data.to_json,:layout => false
+    end
     
     #กรณีคำสั่งที่ 4 นี้ list_position จะหมายถึงค้นหาเพื่อต้องการผลลัพธ์ที่เป็นตำแหน่งข้าราชการปัจจุบัน
     def list_position

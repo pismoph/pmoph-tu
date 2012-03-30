@@ -1,6 +1,15 @@
 var pre_url = ""; 
 
-//---------------------------------------------------------------------------
+
+var btn = new Ext.Button({
+	id: 'btn',
+	text: 'test',
+	listeners: {
+		click: function(){
+			Ext.Msg.alert(date1.getValue().format('Y-m-d'), format_short_thaidate(date1.getValue().format('Y-m-d')));
+		}
+	}
+});
 
 var text1 = new Ext.form.TextField({
 	id: 'text1',
@@ -38,6 +47,33 @@ var text4 = new Ext.form.NumberField({
 	listeners: {
 		keypress: function( me, e ){
 			if(e.keyCode == e.ENTER){
+				if(me.getValue() != ""){
+					Ext.Ajax.request({
+						method: 'post',
+						url: pre_url+'/cmd3/get_place',
+						params: {id: me.getValue()},
+						success: function(result, request ) {
+							var dat = Ext.util.JSON.decode(result.responseText).Records;
+							if(dat.length == 0){
+								text7.setValue('');
+								Ext.Msg.show({
+									title:'ไม่พบข้อมูล',
+									msg: 'ไม่พบข้อมูลหน่วยงานที่ค้นหา',
+									buttons: Ext.Msg.OK,
+									fn: function(){},
+									animEl: 'text4',
+									icon: Ext.MessageBox.ERROR
+								});
+							} else {
+								text7.setValue(dat[0].fullsubdeptname);
+							}
+						}
+					});
+				}
+			}
+		},
+		change: function( me, newValue, oldValue ){
+			if(me.getValue() != ""){
 				if(me.getValue() != ""){
 					Ext.Ajax.request({
 						method: 'post',
@@ -127,7 +163,13 @@ var button1 = new Ext.Button({
 var button2 = new Ext.Button({
 	id: 'button2',
 	iconCls: 'zoom',
-	text: ''
+	text: '',
+	tooltip: 'ค้นหาหน่วยงาน',
+	listeners: {
+		click: function(){
+			winPlace.show();
+		}
+	}
 });
 
 var combo1 = new Ext.ux.form.PisComboBox({
@@ -137,7 +179,7 @@ var combo1 = new Ext.ux.form.PisComboBox({
 	,width: 320
 	,valueField: 'updcode'
 	,displayField: 'updname'
-	,urlStore: pre_url + '/code/cupdate'
+	,urlStore: pre_url + '/codetu/cupdate'
 	,fieldStore: ['updcode', 'updname']
 });
 
@@ -147,7 +189,7 @@ var combo2 = new Ext.ux.form.PisComboBox({
 	,width: 220
 	,valueField: 'poscode'
 	,displayField: 'posname'
-	,urlStore: pre_url + '/code/cposition'
+	,urlStore: pre_url + '/codetu/cposition'
 	,fieldStore: ['poscode', 'posname']
 });
 
@@ -157,7 +199,7 @@ var combo3 = new Ext.ux.form.PisComboBox({
 	,width: 220
 	,valueField: 'excode'
 	,displayField: 'exname'
-	,urlStore: pre_url + '/code/cexecutive'
+	,urlStore: pre_url + '/codetu/cexecutive'
 	,fieldStore: ['excode', 'exname']
 });
 
@@ -167,7 +209,7 @@ var combo4 = new Ext.ux.form.PisComboBox({
 	,width: 220
 	,valueField: 'mcode'
 	,displayField: 'minname'
-	,urlStore: pre_url + '/code/cministry'
+	,urlStore: pre_url + '/codetu/cministry'
 	,fieldStore: ['mcode', 'minname']
 });
 
@@ -177,7 +219,7 @@ var combo5 = new Ext.ux.form.PisComboBox({
 	,width: 220
 	,valueField: 'deptcode'
 	,displayField: 'deptname'
-	,urlStore: pre_url + '/code/cdept'
+	,urlStore: pre_url + '/codetu/cdept'
 	,fieldStore: ['deptcode', 'deptname']
 });
 
@@ -187,7 +229,7 @@ var combo6 = new Ext.ux.form.PisComboBox({
 	,width: 220
 	,valueField: 'subsdcode'
 	,displayField: 'subsdname'
-	,urlStore: pre_url + '/code/csubsdcode'
+	,urlStore: pre_url + '/codetu/csubsdcode'
 	,fieldStore: ['subsdcode', 'subsdname']
 });
 
@@ -197,7 +239,7 @@ var combo7 = new Ext.ux.form.PisComboBox({
 	,width: 220
 	,valueField: 'jobcode'
 	,displayField: 'jobname'
-	,urlStore: pre_url + '/code/cjob'
+	,urlStore: pre_url + '/codetu/cjob'
 	,fieldStore: ['jobcode', 'jobname']
 });
 
@@ -207,7 +249,7 @@ var combo8 = new Ext.ux.form.PisComboBox({
 	,width: 220
 	,valueField: 'ccode'
 	,displayField: 'cname'
-	,urlStore: pre_url + '/code/cgrouplevel'
+	,urlStore: pre_url + '/codetu/cgrouplevel'
 	,fieldStore: ['ccode', 'cname']
 });
 
@@ -217,7 +259,7 @@ var combo9 = new Ext.ux.form.PisComboBox({
 	,width: 220
 	,valueField: 'epcode'
 	,displayField: 'expert'
-	,urlStore: pre_url + '/code/cexpert'
+	,urlStore: pre_url + '/codetu/cexpert'
 	,fieldStore: ['epcode', 'expert']
 });
 
@@ -227,7 +269,7 @@ var combo10 = new Ext.ux.form.PisComboBox({
 	,width: 220
 	,valueField: 'dcode'
 	,displayField: 'division'
-	,urlStore: pre_url + '/code/cdivision'
+	,urlStore: pre_url + '/codetu/cdivision'
 	,fieldStore: ['dcode', 'division']
 });
 
@@ -237,7 +279,7 @@ var combo11 = new Ext.ux.form.PisComboBox({
 	,width: 220
 	,valueField: 'seccode'
 	,displayField: 'secname'
-	,urlStore: pre_url + '/code/csection'
+	,urlStore: pre_url + '/codetu/csection'
 	,fieldStore: ['seccode', 'secname']
 });
 
@@ -270,7 +312,7 @@ var combo13 = new Ext.ux.form.PisComboBox({
 	,width: 220
 	,valueField: 'ptcode'
 	,displayField: 'ptname'
-	,urlStore: pre_url + '/code/cpostype'
+	,urlStore: pre_url + '/codetu/cpostype'
 	,fieldStore: ['ptcode', 'ptname']
 });
 
@@ -284,7 +326,7 @@ var combo14 = new Ext.form.ComboBox({
 	valueField: 'j18code',
 	displayField: 'j18status',
 	store: new Ext.data.Store({
-		url: pre_url+'/code/cj18status',
+		url: pre_url+'/codetu/cj18status',
 		autoLoad: true,
 		reader: new Ext.data.JsonReader({
 			root: 'Records',
@@ -471,6 +513,10 @@ var frmAddEdit = new Ext.form.FormPanel({
 				{
 					layout: 'form',
 					items: [combo1]
+				},
+				{
+					layout: 'form',
+					items: [btn]
 				},
 				{
 					layout: 'form',
@@ -829,6 +875,31 @@ var winSearchPosition = new Ext.Window({
 		}
 	]
 });
+/*-------------------------------------------------------------------
+วันที่ใน $vardate ต้องอยู่ในรูปแบบ YYYY-MM-DD เช่น "2003-08-22" หรือ "2003-08-22 15:23:21.543"
+จะเรีเทิร์นเป็นวันที่ในรูปแบบตัวอักษรไทยชื่อเดือนแบบย่อ เช่น 29 ก.พ. 51 
+-------------------------------------------------------------------*/
+function format_short_thaidate(vardate){
+	if(vardate == "") return "";
+	var arrmonth = new Array();
+	arrmonth[0] = 'ม.ค.';
+	arrmonth[1] = 'ก.พ.';
+	arrmonth[2] = 'มี.ค.';
+	arrmonth[3] = 'เม.ย.';
+	arrmonth[4] = 'พ.ค.';
+	arrmonth[5] = 'มิ.ย.';
+	arrmonth[6] = 'ก.ค.';
+	arrmonth[7] = 'ส.ค.';
+	arrmonth[8] = 'ก.ย.';
+	arrmonth[9] = 'ต.ค.';
+	arrmonth[10] = 'พ.ย.';
+	arrmonth[11] = 'ธ.ค.';
+	
+	thisyear = Number(vardate.substr(0,4));
+	thismonth = Number(vardate.substr(5,2));
+	thisday = Number(vardate.substr(8,2));
+	return thisday+" "+arrmonth[thismonth-1]+" "+(thisyear+543).toString().substr(2,2);
+}
 
 function save_data(){
 	Ext.Ajax.request({
@@ -838,6 +909,7 @@ function save_data(){
 			updcode: combo1.getValue(), //การเคลื่อนไหว
 			refcmnd: text1.getValue(), //คำสั่ง
 			forcedate: date1.getValue(), //วันที่มีผลบังคับใช้
+			forcedatetext: format_short_thaidate(date1.getValue().format('Y-m-d')), //รูปแบบ 12 มี.ค. 55
 
 			posid: text2.getValue(), //เลขที่ตำแหน่ง
 			
@@ -855,6 +927,7 @@ function save_data(){
 			seccode: combo11.getValue(), //ฝ่าย /กลุ่มงาน
 			jobcode: combo7.getValue(), //งาน
 			fullname: text7.getValue(),
+			subdcode: combo6.getValue(), //กลุ่มภารกิจ
 
 			//note: 'ไปปฏิบัติราชการ '+text7.getValue()+' '+text6.getValue(), //หมายเหตุ
 			note: text6.getValue(), //หมายเหตุ
@@ -914,6 +987,161 @@ function reset_form(){
 	frmAddEdit.getForm.reset();
 }
 
+//------------------------------------------------------------------------------
+function funcSearchPlace(){
+	GridStorePlace.baseParams = {
+		provcode: cmbSearchPlace.getValue(),
+		query: txtSearchPlace.getValue()
+	};
+	GridStorePlace.load({
+		params:{
+			start: 0,
+			limit: 100
+		}
+	});
+}
+
+var cmbSearchPlace = new Ext.form.ComboBox({
+	hiddenName: 'cmbSearchPlace',
+	editable: true,
+	mode: 'local',
+	width: 150,
+	triggerAction: 'all',
+	valueField: 'provcode',
+	displayField: 'provname',
+	store: new Ext.data.Store({
+		url: pre_url+'/codetu/cprovince',
+		autoLoad: true,
+		reader: new Ext.data.JsonReader({
+			root: 'Records',
+			fields: ['provcode', 'provname']
+		})
+	}),
+	listeners: {
+		select : function( me, record, index ) {
+			if(me.getValue() != ""){
+				funcSearchPlace();
+			}
+		}
+	}
+});
+
+var txtSearchPlace = new Ext.form.TextField({
+	id: 'txtSearchPlace',
+	width: 200,
+	enableKeyEvents: true,
+	listeners: {
+		keypress: function( me, e ){
+			if(e.keyCode == e.ENTER){
+				funcSearchPlace();
+			}
+		}
+	}
+});
+
+var btnSearchPlace = new Ext.Button({
+	id: 'btnSearchPlace',
+	iconCls: 'zoom',
+	text: '',
+	listeners: {
+		click: function(){
+			funcSearchPlace();
+		}
+	}
+});
+
+var GridStorePlace = new Ext.data.JsonStore({
+	url: pre_url+'/cmd3/list_place_dialog',
+	root: 'Records',
+	totalProperty: 'totalCount',
+	idProperty: 'sdcode',
+	fields: [
+		"sdcode",
+		"fullsubdeptname"
+	]
+});
+
+function setResultPlace(){
+	text4.setValue(GridPlace.selModel.selections.items[0].data.sdcode);
+	text7.setValue(GridPlace.selModel.selections.items[0].data.fullsubdeptname);
+	//text4_selected();
+	winPlace.hide();
+}
+
+var GridPlace = new Ext.grid.GridPanel({
+	title: '',
+	frame: false,
+	stripeRows: true,
+	store: GridStorePlace,
+	viewConfig: {forceFit: true},
+	loadMask: {
+		msg: 'Please wait...'
+	},
+	columns: [
+		new Ext.grid.RowNumberer(),
+		{header: "รหัสหน่วยงาน",dataIndex: 'sdcode', width: 2, sortable: true},
+		{header: "ชื่อหน่วยงาน",dataIndex: 'fullsubdeptname', width: 10, sortable: true}
+	],
+	listeners: {
+		rowdblclick: function( me, rowIndex, e ){
+			setResultPlace();
+		}
+	},
+	tbar: [
+		'จังหวัด : ',
+		cmbSearchPlace,
+		'คำค้นหาชื่อหน่วยงาน : ',
+		txtSearchPlace,
+		btnSearchPlace
+	],
+	bbar: new Ext.PagingToolbar({
+		store: GridStorePlace,
+		pageSize: 100,
+		displayInfo: true,
+		displayMsg: 'รายการที่ {0} - {1} จากทั้งหมด {2}',
+		emptyMsg: "ไม่มีข้อมูล"
+	})
+});
+
+var winPlace = new Ext.Window({
+	title: 'ค้นหาหน่วยงาน',
+	iconCls: 'book-open',
+	applyTo: 'div_window_place',
+	layout: 'fit',
+	width: 550,
+	height: 450,
+	autoScroll: true,
+	closeAction: 'hide',
+	modal: true,
+	showAnimDuration: 0.5,
+	hideAnimDuration: 0.5,
+	items: [
+		GridPlace
+	],
+	buttons: [{
+			text: 'ตกลง',
+			iconCls: 'accept',
+			formBind: true,
+			listeners: {
+				click: function(){
+					if( GridPlace.selModel.selections.items.length != 0 ){
+						setResultPlace();
+					} else {
+						Ext.Msg.alert("Error", "กรุณาคลิกเลือกชื่อหน่วยงานที่ต้องการ");
+					}
+				}
+			}
+		},{
+			text: 'ยกเลิก',
+			iconCls: 'arrow-undo',
+			listeners: {
+				click: function(){
+					winPlace.hide();
+				}
+			}
+		}
+	]
+});
 
 
 

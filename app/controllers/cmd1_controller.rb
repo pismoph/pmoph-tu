@@ -107,7 +107,10 @@ class Cmd1Controller < ApplicationController
         condition_id = params[:condition_id].to_s
         query = params[:query].to_s
         
-        sql = "SELECT pisj18.posid, cposition.shortpre, cposition.posname, cgrouplevel.clname, cprefix.prefix || pispersonel.fname || '  ' || pispersonel.lname AS fullname
+        sql = "SELECT
+            pisj18.posid,
+            coalesce(cposition.shortpre,'') || coalesce(cposition.posname,'') || ' ' || coalesce(cgrouplevel.clname,'') as posname,
+            coalesce(cprefix.prefix,'') || coalesce(pispersonel.fname,'') || '  ' || coalesce(pispersonel.lname,'') AS fullname
             FROM pisj18
             LEFT JOIN cposition ON cposition.poscode=pisj18.poscode
             LEFT JOIN cgrouplevel ON cgrouplevel.ccode=pisj18.c
@@ -118,19 +121,22 @@ class Cmd1Controller < ApplicationController
         if condition_id != ""
             
             case condition_id
-            when '1' #กรณีค้นหาด้วย ชื่อ-นามสกุลของผู้ครองตำแหน่ง
+            #when '1' #กรณีค้นหาด้วย ชื่อ-นามสกุลของผู้ครองตำแหน่ง
+            #    if query != ""
+            #        sql += " AND cprefix.prefix || pispersonel.fname || pispersonel.lname LIKE '%#{query}%'"
+            #    end
+            #    sql += " AND NOT(pisj18.flagupdate='1' and (length(trim(pisj18.id))=0 or pisj18.id is null))"
+            when '1' #กรณีค้นหาด้วย ตำแหน่งสายงาน
                 if query != ""
-                    sql += " AND cprefix.prefix || pispersonel.fname || pispersonel.lname LIKE '%#{query}%'"
+                    sql += " AND coalesce(cposition.shortpre,'') || coalesce(cposition.posname,'') || ' ' || coalesce(cgrouplevel.clname,'') LIKE '%#{query}%'"
                 end
-                sql += " AND NOT(pisj18.flagupdate='1' and (length(trim(pisj18.id))=0 or pisj18.id is null))"
-            when '2' #กรณีค้นหาด้วย ตำแหน่งสายงาน
-                if query != ""
-                    sql += " AND cposition.posname || cgrouplevel.clname LIKE '%#{query}%'"
-                end
-                sql += " AND NOT(pisj18.flagupdate='1' and (length(trim(pisj18.id))=0 or pisj18.id is null))"
-            when '3' #กรณีค้นหาด้วยตำแหน่งว่าง จะไม่สนใจคำค้นหา มันจะแสดงตำแหน่งว่างทั้งหมดที่มี
-                sql += " AND pisj18.flagupdate='1' and (length(trim(pisj18.id))=0 or pisj18.id is null)"
+                #sql += " AND NOT(pisj18.flagupdate='1' and (length(trim(pisj18.id))=0 or pisj18.id is null))"
+            #when '3' #กรณีค้นหาด้วยตำแหน่งว่าง จะไม่สนใจคำค้นหา มันจะแสดงตำแหน่งว่างทั้งหมดที่มี
+                #sql += " AND pisj18.flagupdate='1' and (length(trim(pisj18.id))=0 or pisj18.id is null)"
             end
+            
+            #ทุกเงื่อนไขค้นหา จะต้องเอามาเฉพาะตำแหน่งว่างเท่านั้น
+            sql += " AND pisj18.flagupdate='1' and (length(trim(pisj18.id))=0 or pisj18.id is null) order by posname"
         end
         
         rs = Pisj18.find_by_sql(sql)
@@ -142,7 +148,7 @@ class Cmd1Controller < ApplicationController
         return_data[:totalCount] = totalCount
         return_data[:Records]   = rs.collect{|u|{
             :posid => u.posid,
-            :posname => "#{u.shortpre}#{u.posname} #{u.clname}",
+            :posname => u.posname,
             :fullname => u.fullname
           }
         }
@@ -680,6 +686,7 @@ class Cmd1Controller < ApplicationController
                 rs3.ptcode = ptcode
                 rs3.note = text6
                 rs3.save!
+                
 
 
                 #กรณีเป็นอดีตข้าราชการ บรรจุกลับ ต้องไปเปลี่ยนค่า pstatus ให้เป็น1 เพื่อบอกว่ามีสถานะเป็นข้าราชการแล้ว
@@ -797,7 +804,8 @@ class Cmd1Controller < ApplicationController
                 if quitdate == "" 
                     quitdate = "null"
                 else
-                    quitdate = "'#{quitdate}'"
+                    #quitdate = "'#{quitdate}'"
+                    quitdate = "null" #กรณีบรรจุกลับต้องเคลียร์วันที่ออกจากราชการ quitdate
                 end
                 
                 if attenddate == "" 

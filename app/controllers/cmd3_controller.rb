@@ -1,7 +1,7 @@
 class Cmd3Controller < ApplicationController
     skip_before_filter :verify_authenticity_token
 
-    #---------------------------------------------------------------------------
+    
     
     #กรณีคำสั่งที่ 5 นี้ list_position จะหมายถึงค้นหาเพื่อต้องการผลลัพธ์ที่เป็นตำแหน่งข้าราชการปัจจุบัน
     def list_position
@@ -110,15 +110,15 @@ class Cmd3Controller < ApplicationController
         if posid == ""
             posid = 0
         end
-        sql = "SELECT pisj18.poscode, pisj18.excode, pisj18.c AS ccode, pisj18.epcode, pisj18.ptcode, pisj18.mincode, 
-            pisj18.deptcode, pisj18.dcode, pisj18.sdcode, pisj18.seccode, pisj18.jobcode, pisj18.salary,
+        sql = "SELECT pispersonel.poscode, pispersonel.excode, pispersonel.c AS ccode, pispersonel.epcode, pispersonel.ptcode, pispersonel.mincode, 
+            pispersonel.deptcode, pispersonel.dcode, pispersonel.sdcode, pispersonel.seccode, pispersonel.jobcode, pispersonel.salary,
             csubdept.shortpre || csubdept.subdeptname|| ' ' || camphur.shortpre || camphur.amname || ' ' || cprovince.shortpre || cprovince.provname AS fullsubdeptname,
             cprefix.prefix || pispersonel.fname || '  ' || pispersonel.lname as fullname, pispersonel.j18code, pispersonel.note
-            FROM pisj18 
-            JOIN csubdept ON pisj18.sdcode=csubdept.sdcode
+            FROM pispersonel 
+            JOIN csubdept ON pispersonel.sdcode=csubdept.sdcode
             JOIN camphur ON csubdept.amcode=camphur.amcode AND csubdept.provcode=camphur.provcode
             JOIN cprovince ON csubdept.provcode=cprovince.provcode
-            JOIN pispersonel ON pisj18.posid=pispersonel.posid
+            JOIN pisj18 ON pisj18.posid=pispersonel.posid
             JOIN cprefix ON pispersonel.pcode=cprefix.pcode
             WHERE pisj18.posid=#{posid} AND pispersonel.pstatus='1'"
         #ต้องเป็นตำแหน่งที่มีคนบรรจุเท่านั้น
@@ -151,8 +151,9 @@ class Cmd3Controller < ApplicationController
     
     def save
         updcode = params[:updcode] #การเคลื่อนไหว
-        refcmnd = params[:refcmnd] #คำสั่ง
+        refcmnd = params[:refcmnd].to_s #คำสั่ง
         forcedate = params[:forcedate][0,10].to_s #วันที่มีผลบังคับใช้
+        forcedatetext = params[:forcedatetext].to_s
 
         posid = params[:posid] #เลขที่ตำแหน่ง
         
@@ -167,6 +168,7 @@ class Cmd3Controller < ApplicationController
         deptcode = params[:deptcode] #กรม
         dcode = params[:dcode] #กอง
         sdcode = params[:sdcode] #รหัสหน่วยงาน
+        subdcode = params[:subdcode] #กลุ่มภารกิจ
         seccode = params[:seccode] #ฝ่าย /กลุ่มงาน
         jobcode = params[:jobcode] #งาน
         fullname = params[:fullname] #ชื่อหน่วยงานแบบเต็ม
@@ -175,18 +177,6 @@ class Cmd3Controller < ApplicationController
         
         upddate = params[:upddate] #วันที่บันทึก เดี๋ยวให้ทาง postgres บันทึกเวลาเอง
         upduser = params[:upduser] #user ที่บันทึก
-        
-        sql = "select 
-            cdivision.prefix as aaa, cdivision.division as bbb, csection.shortname as ccc, csection.secname as ddd, cjob.jobname as eee
-            from pispersonel left join 
-            cdivision on pispersonel.dcode=cdivision.dcode left join 
-            csection on pispersonel.seccode=csection.seccode left join 
-            cjob on pispersonel.jobcode=cjob.jobcode 
-            where pispersonel.posid=#{posid} "
-        
-        rs = Pispersonel.find_by_sql(sql)
-        
-        note = "ไปปฏิบัติราชการ " + fullname + " " + rs[0].aaa + rs[0].bbb + " " + rs[0].ccc + rs[0].ddd + " งาน" + rs[0].eee + " ตั้งแต่ " + forcedate + " " + note
         
         #หา id ซึ่งเป็น id ของคน จากค่าของ posid
         sql = "select id as pispersonel_id from pisj18 where posid=#{posid}"
@@ -204,52 +194,52 @@ class Cmd3Controller < ApplicationController
         begin
             Pisposhis.transaction do
                 
-                #อัพเดตข้อมูลบุคคล
-                sql = "update pispersonel set note='#{note}', upddate=now(), upduser='#{upduser}'"
-                if j18code != ""
-                    sql += ", j18code=#{j18code}"
-                end
-                if poscode != ""
-                    sql += ", poscode=#{poscode}"
-                end
-                if excode != ""
-                    sql += ", excode=#{excode}"
-                end
-                if epcode != ""
-                    sql += ", epcode=#{epcode}"
-                end
-                if mincode != ""
-                    sql += ", mincode=#{mincode}"
-                end
-                if dcode != ""
-                    sql += ", dcode=#{dcode}"
-                end
-                if deptcode != ""
-                    sql += ", deptcode=#{deptcode}"
-                end
-                if sdcode != ""
-                    sql += ", sdcode=#{sdcode}"
-                end
-                if seccode != ""
-                    sql += ", seccode=#{seccode}"
-                end
-                if jobcode != ""
-                    sql += ", jobcode=#{jobcode}"
-                end
-                if posid != ""
-                    sql += ", posid=#{posid}"
-                end
-                if c != ""
-                    sql += ", c=#{c}"
-                end
-                if salary != ""
-                    sql += ",salary=#{salary}"
-                end
-                if ptcode != ""
-                    sql += ", ptcode=#{ptcode}"
-                end
-                sql += " where id='#{id}'"
+                #อัพเดตข้อมูลบุคคล แต่ยังไม่อัพเดต note 
+                rs4 = Pispersonel.find(id)
+                #rs4.note = pisnote
+                rs4.j18code = j18code
+                rs4.poscode = poscode
+                rs4.excode = excode
+                rs4.epcode = epcode
+                rs4.mincode = mincode
+                rs4.dcode = dcode
+                rs4.deptcode = deptcode
+                rs4.sdcode = sdcode
+                rs4.subdcode = subdcode
+                rs4.seccode = seccode
+                rs4.jobcode = jobcode
+                rs4.posid = posid
+                rs4.c = c
+                rs4.salary = salary
+                rs4.ptcode = ptcode
+                rs4.save!
+                
+                
+                #หาการรวมหมายเหตุอัตโนมัติ
+                sql = "select 
+                    cdivision.prefix || cdivision.division as aaa, csubsdcode.subsdname as bbb,
+                    csection.shortname || csection.secname as ccc, cjob.jobname as ddd
+                    from pispersonel left join 
+                    cdivision on pispersonel.dcode=cdivision.dcode left join 
+                    csection on pispersonel.seccode=csection.seccode left join 
+                    cjob on pispersonel.jobcode=cjob.jobcode left join
+                    csubsdcode on pispersonel.subdcode=csubsdcode.subsdcode 
+                    where pispersonel.posid=#{posid} "
+                
                 rs = Pispersonel.find_by_sql(sql)
+                a1 = rs[0].aaa.to_s #กอง
+                a2 = rs[0].bbb.to_s #กลุ่มภารกิจ
+                a3 = rs[0].ccc.to_s #ฝ่าย/กลุ่มงาน
+                a4 = rs[0].ddd.to_s #งาน
+                if a4 != ""
+                    a4 = "งาน"+a4
+                end
+                pisnote = "ไปปฏิบัติราชการ "+a1+" "+fullname.to_s+" "+a2+" "+a3+" "+a4+" ตั้งแต่ "+forcedatetext+" "+refcmnd
+                #อัพเดตข้อมูลบุคคล เฉพาะ note อย่างเดียว
+                rs4 = Pispersonel.find(id)
+                rs4.note = pisnote
+                rs4.save!
+                
         
                 #เพิ่มเรคอร์ดประวัติ
                 rs3 = Pisposhis.new
@@ -262,6 +252,7 @@ class Cmd3Controller < ApplicationController
                 rs3.mcode = mincode
                 rs3.dcode = dcode
                 rs3.deptcode = deptcode
+                rs3.subdcode = subdcode
                 rs3.sdcode = sdcode
                 rs3.seccode = seccode
                 rs3.jobcode = jobcode
@@ -273,7 +264,7 @@ class Cmd3Controller < ApplicationController
                 rs3.ptcode = ptcode
                 rs3.note = note
                 #rs3.upddate = ''
-                rs3.upduser = upduser
+                #rs3.upduser = upduser
                 rs3.save!
             end
             

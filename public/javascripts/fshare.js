@@ -523,10 +523,13 @@ var mainMenu = new Ext.Toolbar({
 
 
 
-function initCmd(){   
+function initCmd(){
     obj = Ext.getCmp('mainCenter');
     obj.removeAll();
-    if (cur_ref == 'test'){
+    obj.add(frmAddEdit);
+    obj.getLayout().setActiveItem(frmAddEdit);
+    loadMask.hide();
+    /*if (cur_ref == 'test'){
         obj.add(mypanel);
         obj.getLayout().setActiveItem(mypanel);
         loadMask.hide();
@@ -555,7 +558,7 @@ function initCmd(){
         obj.add(frmAddEdit);
         obj.getLayout().setActiveItem(frmAddEdit);
         loadMask.hide();
-    }
+    }*/
 }
 
 
