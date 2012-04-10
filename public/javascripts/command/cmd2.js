@@ -203,13 +203,15 @@ function text2_get_position(me){
 			} else {
 				Ext.Msg.show({
 					title:'ไม่พบข้อมูล',
-					msg: 'เลขที่ตำแหน่งนี้จะต้องเป็นตำแหน่งที่มีคนครองอยู่เท่านั้น',
+					msg: 'เลขที่ตำแหน่งนี้จะต้องเป็นตำแหน่งว่างเท่านั้น',
 					buttons: Ext.Msg.OK,
-					fn: function(){},
+					fn: function(){
+						text2.setValue('');
+					},
 					icon: Ext.MessageBox.ERROR
 				});
 				//ก่อนจะรีเซตฟอร์ม ต้องสำรองข้อมูลใน การเคลื่อนไหว, คำสั่ง และ วันที่มีผลบังคับใช้ เอาไว้ก่อน
-				a = combo1.getValue();
+				/*a = combo1.getValue();
 				b = text1.getValue();
 				c = date1.getValue();
 				frmAddEdit.getForm().reset();
@@ -218,7 +220,7 @@ function text2_get_position(me){
 				if(c != ""){
 					c = c.format("d")+"/"+c.format("m")+"/"+ (Number(c.format("Y"))+543).toString();
 					date1.setValue(c);
-				}
+				}*/
 			}
 		}
 	});
@@ -248,6 +250,63 @@ var hid_id = new Ext.form.Hidden({
 	id: 'hid_id'
 });
 
+function text3_get_olddata(){
+	Ext.Ajax.request({
+		method: 'post',
+		url: pre_url+'/cmd2/get_olddata',
+		params: {posid: text3.getValue()},
+		success: function(result, request ) {
+			//var x = text3.getValue();
+			//frmAddEdit.getForm().reset();
+			if(Ext.util.JSON.decode(result.responseText).Records.length == 0){
+				Ext.Msg.show({
+					title:'ไม่พบข้อมูล',
+					msg: 'เลขที่ตำแหน่งนี้ จะต้องเป็นคนที่อยู่ในรายชื่อชั่วคราวเท่านั้น',
+					buttons: Ext.Msg.OK,
+					fn: function(){
+						text3.setValue('');
+					},
+					icon: Ext.MessageBox.ERROR
+				});
+				return;
+			}
+			var dat = Ext.util.JSON.decode(result.responseText).Records[0];
+			var dat2 = Ext.util.JSON.decode(result.responseText).Records2[0];
+			
+			if(Ext.util.JSON.decode(result.responseText).Records.length > 0){
+				//text3.setValue(x);
+				hid_id.setValue(dat.id);
+				text21.setValue(dat.fullname);
+				text22.setValue(dat.posname);
+				text23.setValue(dat.cname);
+				text24.setValue(dat.salary);
+				text25.setValue(dat.exname);
+				text26.setValue(dat.expert);
+				text27.setValue(dat.ptname);
+				text28.setValue(dat.division);
+				text29.setValue(dat.fullsubdeptname);
+				text30.setValue(dat.subsdname);
+				text31.setValue(dat.secname);
+				text32.setValue(dat.jobname);
+				
+				//text2.setValue(text3.getValue());
+				//text2_get_position(text2);
+				
+				combo14.setValue(dat2.j18code);
+				text42.setValue(dat2.deptname);
+				text43.setValue(dat2.division);
+				text44.setValue(dat2.fullsubdeptname);
+				text45.setValue(dat2.subsdname);
+				text46.setValue(dat2.secname);
+				text47.setValue(dat2.jobname);
+				//text48.setValue(dat2.fullname);
+			} else {
+				Ext.Msg.alert("Error","ไม่พบข้อมูลตำแหน่ง");
+			}
+		}
+	});	
+}
+
 var text3 = new Ext.form.NumberField({
 	fieldLabel: 'เลขที่ตำแหน่ง',
 	width: 120,
@@ -256,48 +315,7 @@ var text3 = new Ext.form.NumberField({
 	listeners: {
 		keypress: function( me, e ){
 			if(e.keyCode == e.ENTER){
-				Ext.Ajax.request({
-					method: 'post',
-					url: pre_url+'/cmd2/get_olddata',
-					params: {posid: me.getValue()},
-					success: function(result, request ) {
-						var x = me.getValue();
-						//frmAddEdit.getForm().reset();
-						var dat = Ext.util.JSON.decode(result.responseText).Records[0];
-						var dat2 = Ext.util.JSON.decode(result.responseText).Records2[0];
-						
-						if(Ext.util.JSON.decode(result.responseText).Records.length > 0){
-							text3.setValue(x);
-							hid_id.setValue(dat.id);
-							text21.setValue(dat.fullname);
-							text22.setValue(dat.posname);
-							text23.setValue(dat.cname);
-							text24.setValue(dat.salary);
-							text25.setValue(dat.exname);
-							text26.setValue(dat.expert);
-							text27.setValue(dat.ptname);
-							text28.setValue(dat.division);
-							text29.setValue(dat.fullsubdeptname);
-							text30.setValue(dat.subsdname);
-							text31.setValue(dat.secname);
-							text32.setValue(dat.jobname);
-							
-							text2.setValue(text3.getValue());
-							text2_get_position(text2);
-							
-							combo14.setValue(dat2.j18code);
-							text42.setValue(dat2.deptname);
-							text43.setValue(dat2.division);
-							text44.setValue(dat2.fullsubdeptname);
-							text45.setValue(dat2.subsdname);
-							text46.setValue(dat2.secname);
-							text47.setValue(dat2.jobname);
-							//text48.setValue(dat2.fullname);
-						} else {
-							Ext.Msg.alert("Error","ไม่พบข้อมูลตำแหน่ง");
-						}
-					}
-				});	
+				text3_get_olddata();
 			}
 		}
 	}
@@ -592,6 +610,50 @@ var button1 = new Ext.Button({
 	}
 });
 
+var button2 = new Ext.Button({
+	id: 'button2',
+	iconCls: 'zoom',
+	text: 'ตำแหน่งว่าง',
+	tooltip: 'ตำแหน่งว่าง',
+	listeners: {
+		click: function(){
+			winPositionBlank.setPosition(button2.getPosition());
+			winPositionBlank.show();
+			cmbSearchPositionBlank.setValue(1); //เมื่อเปิดหน้าต่างครั้งแรกให้ แสดงตำแหน่งว่างมารอไว้ก่อน
+			funcSearchPositionBlank();
+		}
+	}
+});
+
+var button3 = new Ext.Button({
+	id: 'button3',
+	iconCls: 'user-go',
+	text: 'ย้ายคนออกจากตำแหน่งชั่วคราว',
+	tooltip: 'ย้ายคนออกจากตำแหน่งชั่วคราว',
+	listeners: {
+		click: function(){
+			winSearchPosition.setPosition(button3.getPosition());
+			winSearchPosition.show();
+			cmbSearchPosition.setValue(1); //เมื่อเปิดหน้าต่างครั้งแรกให้ แสดงรายชื่อตำแหน่งชื่อคนมาทั้งหมด
+			funcSearchPosition();
+		}
+	}
+});
+
+var button4 = new Ext.Button({
+	id: 'button4',
+	iconCls: 'zoom',
+	text: 'รายชื่อชั่วคราว',
+	tooltip: 'รายชื่อชั่วคราว',
+	listeners: {
+		click: function(){
+			winTmp.setPosition(button4.getPosition());
+			winTmp.show();
+			GridTmpStore.load();
+		}
+	}
+});
+
 var combo2 = new Ext.ux.form.PisComboBox({
 	fieldLabel: 'ตำแหน่งสายงาน'
 	,hiddenName: 'combo2'
@@ -707,7 +769,7 @@ var combo11 = new Ext.ux.form.PisComboBox({
 });
 
 var fieldset1 = new Ext.form.FieldSet({
-	title: 'ตำแหน่งที่แต่งตั้ง',
+	title: 'ตำแหน่งที่แต่งตั้ง (จะต้องเป็นตำแหน่งว่างเท่านั้น)',
 	width: 530,
 	items : [
 		{
@@ -716,6 +778,10 @@ var fieldset1 = new Ext.form.FieldSet({
 				{
 					layout: 'form',
 					items: [text2]
+				},
+				{
+					layout: 'form',
+					items: [button2]
 				}
 			]
 		},
@@ -838,7 +904,7 @@ var fieldset1 = new Ext.form.FieldSet({
 });
 
 var fieldset2 = new Ext.form.FieldSet({
-	title: 'ตำแหน่งเดิม',
+	title: 'ตำแหน่งเดิม (จะต้องเป็นคนที่อยู่ในรายชื่อชั่วคราวเท่านั้น)',
 	width: 400,
 	items : [
 		{
@@ -847,6 +913,10 @@ var fieldset2 = new Ext.form.FieldSet({
 				{
 					layout: 'form',
 					items: [text3]
+				},
+				{
+					layout: 'form',
+					items: [button4]
 				}
 			]
 		},
@@ -1039,6 +1109,7 @@ var frmAddEdit = new Ext.form.FormPanel({
 	frame: true,
 	region: 'center',
 	autoScroll: true,
+	monitorValid: true,
 	items: [
 		{
 			layout: 'column',
@@ -1055,7 +1126,8 @@ var frmAddEdit = new Ext.form.FormPanel({
 		},
 		combo1,
 		text6,
-		radio1,
+		//radio1,
+		button3,
 		{
 			layout: 'column',
 			items: [
@@ -1093,15 +1165,6 @@ var frmAddEdit = new Ext.form.FormPanel({
 		}
 	]
 });
-
-/*var viewport = new Ext.Viewport({
-	layout: 'border',
-	renderTo: Ext.getBody(),
-	//autoScroll: true,
-	items: [
-		frmAddEdit
-	]
-});*/
 
 //------------------------------------------------------------------------------
 function funcSearchPlace(){
@@ -1342,3 +1405,399 @@ function save_data(){
 		}
 	});
 }
+
+
+
+function funcSearchPosition(){
+	GridStorePosition.baseParams = {
+		condition_id: cmbSearchPosition.getValue(),
+		query: txtSearchPosition.getValue()
+	};
+	GridStorePosition.load({
+		params:{
+			start: 0,
+			limit: 100
+		}
+	});
+}
+
+function move_to_tmp(posid, id){
+	//Ext.Msg.alert('Msg', 'posid='+posid+', id='+id);
+	//ทำการปลดคนออกจากตำแหน่ง โดยย้าย posid ไปไว้ที่ last_posid
+	// และทำให้ตาราง pisj18 ไม่มี id ของคนอยู่
+	Ext.Ajax.request({
+		method: 'post',
+		url: pre_url+'/cmd2/move_to_tmp',
+		params: {posid: posid, id: id},
+		success: function(result, request ) {
+			obj = Ext.util.JSON.decode(result.responseText);
+			if( obj.success == true){
+				Ext.Msg.show({
+					title:'Complete',
+					msg: 'ทำการย้ายคนไปที่รายชื่อชั่วคราวแล้ว',
+					buttons: Ext.Msg.OK,
+					icon: Ext.MessageBox.INFO
+				});
+				winSearchPosition.hide();
+			} else {
+				Ext.Msg.show({
+					title:'Error',
+					msg: 'เกิดข้อผิดพลาด ไม่สามารถย้ายคนไปที่รายชื่อชั่วคราวได้',
+					buttons: Ext.Msg.OK,
+					icon: Ext.MessageBox.ERROR
+				});
+			}
+		}
+	});
+}
+
+var GridStorePosition = new Ext.data.JsonStore({
+	url: pre_url+'/cmd2/list_position',
+	root: 'Records',
+	totalProperty: 'totalCount',
+	idProperty: 'posid',
+	fields: [
+		"posid",
+		"posname",
+		"fullname",
+		"id"
+	]
+});
+
+var GridPosition = new Ext.grid.GridPanel({
+	id: 'GridPosition',
+	title: '',
+	frame: false,
+	stripeRows: true,
+	store: GridStorePosition,
+	viewConfig: {forceFit: true},
+	loadMask: {
+		msg: 'Please wait...'
+	},
+	columns: [
+		new Ext.grid.RowNumberer(),
+		{header: "เลขที่ตำแหน่ง",dataIndex: 'posid', width: 4, sortable: true},
+		{header: "ตำแหน่ง",dataIndex: 'posname', width: 10, sortable: true},
+		{header: "ชื่อ - นามสกุล",dataIndex: 'fullname', width: 10, sortable: true}
+	],
+	listeners: {
+		rowdblclick: function( me, rowIndex, e ){
+			move_to_tmp(me.selModel.selections.items[0].data.posid, me.selModel.selections.items[0].data.id);
+		}
+	},
+	tbar: [
+		'ค้นหาโดย : ',
+		cmbSearchPosition = new Ext.form.ComboBox({
+			hiddenName: 'cmbSearchPosition',
+			mode: 'local',
+			width: 200,
+			triggerAction: 'all',
+			valueField: 'condition_id',
+			displayField: 'condition_text',
+			store: new Ext.data.ArrayStore({
+				fields: ['condition_id', 'condition_text'],
+				data: [['1', 'ชื่อ-นามสกุลผู้ครองตำแหน่ง'], ['2', 'ตำแหน่งสายงาน']]
+			}),
+			listeners: {
+				select : function( me, record, index ) {
+					funcSearchPosition();
+				}
+			}
+		}),
+		'คำค้นหา : ',
+		txtSearchPosition = new Ext.form.TextField({
+			id: 'txtSearchPosition',
+			width: 200,
+			enableKeyEvents: true,
+			listeners: {
+				keypress: function( me, e ){
+					if(e.keyCode == e.ENTER){
+						funcSearchPosition();
+					}
+				}
+			}
+		}),
+		btnSearchPosition = new Ext.Button({
+			id: 'btnSearchPosition',
+			iconCls: 'zoom',
+			text: '',
+			listeners: {
+				click: function(){
+					funcSearchPosition();
+				}
+			}
+		})
+	],
+	bbar: new Ext.PagingToolbar({
+		store: GridStorePosition,
+		pageSize: 100,
+		displayInfo: true,
+		displayMsg: 'รายการที่ {0} - {1} จากทั้งหมด {2}',
+		emptyMsg: "ไม่มีข้อมูล"
+	})
+});
+
+var winSearchPosition = new Ext.Window({
+	id: 'winSearchPosition',
+	title: 'รายชื่อข้าราชการ (เลือกเพื่อย้ายไปยังรายชื่อชั่วคราว)',
+	iconCls: 'book-open',
+	applyTo: 'div_window_searchposition',
+	layout: 'fit',
+	width: 600,
+	height: 420,
+	autoScroll: true,
+	closeAction: 'hide',
+	modal: true,
+	items: [
+		GridPosition
+	],
+	buttons: [
+		{
+			text: 'ตกลง',
+			iconCls: 'accept',
+			formBind: true,
+			listeners: {
+				click: function(){
+					if( GridPosition.selModel.selections.items.length != 0 ){
+						move_to_tmp(GridPosition.selModel.selections.items[0].data.posid, GridPosition.selModel.selections.items[0].data.id);
+					} else {
+						Ext.Msg.alert("Error", "กรุณาคลิกเลือกเลขที่ตำแหน่งที่ต้องการ");
+					}
+				}
+			}
+		},
+		{
+			text: 'ยกเลิก',
+			iconCls: 'arrow-undo',
+			listeners: {
+				click: function(){
+					winSearchPosition.hide();
+				}
+			}
+		}
+	]
+});
+
+var GridTmpStore = new Ext.data.JsonStore({
+	url: pre_url+'/cmd2/list_tmp',
+	root: 'Records',
+	//totalProperty: 'totalCount',
+	idProperty: 'posid',
+	fields: [
+		"posid",
+		"posname",
+		"fullname"
+	]
+});
+
+var GridTmp = new Ext.grid.GridPanel({
+	id: 'GridTmp',
+	title: '',
+	frame: false,
+	stripeRows: true,
+	store: GridTmpStore,
+	viewConfig: {forceFit: true},
+	loadMask: {
+		msg: 'Please wait...'
+	},
+	columns: [
+		new Ext.grid.RowNumberer(),
+		{header: "เลขที่ตำแหน่ง",dataIndex: 'posid', width: 4, sortable: true},
+		{header: "ตำแหน่ง",dataIndex: 'posname', width: 10, sortable: true},
+		{header: "ชื่อ - นามสกุล",dataIndex: 'fullname', width: 10, sortable: true}
+	],
+	listeners: {
+		rowdblclick: function( me, rowIndex, e ){
+			text3.setValue(me.selModel.selections.items[0].data.posid);
+			winTmp.hide();
+			text3_get_olddata();
+		}
+	}
+});
+
+var winTmp = new Ext.Window({
+	id: 'winTmp',
+	title: 'รายชื่อชั่วคราว',
+	iconCls: 'user-go',
+	applyTo: 'div_window_tmp',
+	layout: 'fit',
+	width: 600,
+	height: 420,
+	autoScroll: true,
+	closeAction: 'hide',
+	modal: true,
+	items: [
+		GridTmp
+	],
+	buttons: [
+		{
+			text: 'ตกลง',
+			iconCls: 'accept',
+			formBind: true,
+			listeners: {
+				click: function(){
+					if( GridTmp.selModel.selections.items.length != 0 ){
+						text3.setValue(GridTmp.selModel.selections.items[0].data.posid);
+						winTmp.hide();
+						text3_get_olddata();
+					} else {
+						Ext.Msg.alert("Error", "กรุณาคลิกเลือกเลขที่ตำแหน่งที่ต้องการ");
+					}
+				}
+			}
+		},
+		{
+			text: 'ยกเลิก',
+			iconCls: 'arrow-undo',
+			listeners: {
+				click: function(){
+					winTmp.hide();
+				}
+			}
+		}
+	]
+});
+
+
+//-----------------------------------------------------------------------
+//-----------------------------------------------------------------------
+function funcSearchPositionBlank(){
+	GridStorePositionBlank.baseParams = {
+		condition_id: cmbSearchPositionBlank.getValue(),
+		query: txtSearchPositionBlank.getValue()
+	};
+	GridStorePositionBlank.load({
+		params:{
+			start: 0,
+			limit: 100
+		}
+	});
+}
+
+var GridStorePositionBlank = new Ext.data.JsonStore({
+	url: pre_url+'/cmd2/list_position_blank',
+	root: 'Records',
+	totalProperty: 'totalCount',
+	idProperty: 'posid',
+	fields: [
+		"posid",
+		"posname",
+		"fullname"
+	]
+});
+
+var GridPositionBlank = new Ext.grid.GridPanel({
+	id: 'GridPositionBlank',
+	title: '',
+	frame: false,
+	stripeRows: true,
+	store: GridStorePositionBlank,
+	viewConfig: {forceFit: true},
+	loadMask: {
+		msg: 'Please wait...'
+	},
+	columns: [
+		new Ext.grid.RowNumberer(),
+		{header: "เลขที่ตำแหน่ง",dataIndex: 'posid', width: 4, sortable: true},
+		{header: "ตำแหน่ง",dataIndex: 'posname', width: 10, sortable: true}
+	],
+	listeners: {
+		rowdblclick: function( me, rowIndex, e ){
+			text2.setValue(me.selModel.selections.items[0].data.posid);
+			winPositionBlank.hide();
+			text2_get_position(text2);
+		}
+	},
+	tbar: [
+		'ค้นหาโดย : ',
+		cmbSearchPositionBlank = new Ext.form.ComboBox({
+			hiddenName: 'cmbSearchPositionBlank',
+			mode: 'local',
+			width: 200,
+			triggerAction: 'all',
+			valueField: 'condition_id',
+			displayField: 'condition_text',
+			store: new Ext.data.ArrayStore({
+				fields: ['condition_id', 'condition_text'],
+				data: [['1', 'ตำแหน่งสายงาน']]
+			}),
+			listeners: {
+				select : function( me, record, index ) {
+					funcSearchPositionBlank();
+				}
+			}
+		}),
+		'คำค้นหา : ',
+		txtSearchPositionBlank = new Ext.form.TextField({
+			id: 'txtSearchPositionBlank',
+			width: 200,
+			enableKeyEvents: true,
+			listeners: {
+				keypress: function( me, e ){
+					if(e.keyCode == e.ENTER){
+						funcSearchPositionBlank();
+					}
+				}
+			}
+		}),
+		btnSearchPositionBlank = new Ext.Button({
+			id: 'btnSearchPositionBlank',
+			iconCls: 'zoom',
+			text: '',
+			listeners: {
+				click: function(){
+					funcSearchPositionBlank();
+				}
+			}
+		})
+	],
+	bbar: new Ext.PagingToolbar({
+		store: GridStorePositionBlank,
+		pageSize: 100,
+		displayInfo: true,
+		displayMsg: 'รายการที่ {0} - {1} จากทั้งหมด {2}',
+		emptyMsg: "ไม่มีข้อมูล"
+	})
+});
+
+var winPositionBlank = new Ext.Window({
+	title: 'ค้นหาตำแหน่งว่าง',
+	iconCls: 'book-open',
+	applyTo: 'div_window_position_blank',
+	layout: 'fit',
+	width: 550,
+	height: 420,
+	autoScroll: true,
+	closeAction: 'hide',
+	modal: true,
+	items: [
+		GridPositionBlank
+	],
+	buttons: [
+		{
+			text: 'ตกลง',
+			iconCls: 'accept',
+			formBind: true,
+			listeners: {
+				click: function(){
+					if( GridPositionBlank.selModel.selections.items.length != 0 ){
+						text2.setValue(GridPositionBlank.selModel.selections.items[0].data.posid);
+						winPositionBlank.hide();
+						text2_get_position(text2);
+					} else {
+						Ext.Msg.alert("Error", "กรุณาคลิกเลือกตำแหน่งว่างที่ต้องการ");
+					}
+				}
+			}
+		},
+		{
+			text: 'ยกเลิก',
+			iconCls: 'arrow-undo',
+			listeners: {
+				click: function(){
+					winPositionBlank.hide();
+				}
+			}
+		}
+	]
+});

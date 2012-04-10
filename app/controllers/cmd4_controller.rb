@@ -1,3 +1,4 @@
+# coding: utf-8
 class Cmd4Controller < ApplicationController
     skip_before_filter :verify_authenticity_token
 

@@ -1,4 +1,165 @@
+# coding: utf-8
 class Cmd2Controller < ApplicationController
+    
+    def list_position_blank
+        start = params[:start].to_s
+        limit = params[:limit].to_s
+        condition_id = params[:condition_id].to_s
+        query = params[:query].to_s
+        
+        sql = "SELECT
+            pisj18.posid,
+            coalesce(cposition.shortpre,'') || coalesce(cposition.posname,'') || ' ' || coalesce(cgrouplevel.clname,'') as posname,
+            coalesce(cprefix.prefix,'') || coalesce(pispersonel.fname,'') || '  ' || coalesce(pispersonel.lname,'') AS fullname
+            FROM pisj18
+            LEFT JOIN cposition ON cposition.poscode=pisj18.poscode
+            LEFT JOIN cgrouplevel ON cgrouplevel.ccode=pisj18.c
+            LEFT JOIN pispersonel ON pispersonel.id=pisj18.id
+            LEFT JOIN cprefix ON cprefix.pcode=pispersonel.pcode
+            WHERE 1=1"
+        
+        if condition_id != ""
+            
+            case condition_id
+            #when '1' #กรณีค้นหาด้วย ชื่อ-นามสกุลของผู้ครองตำแหน่ง
+            #    if query != ""
+            #        sql += " AND cprefix.prefix || pispersonel.fname || pispersonel.lname LIKE '%#{query}%'"
+            #    end
+            #    sql += " AND NOT(pisj18.flagupdate='1' and (length(trim(pisj18.id))=0 or pisj18.id is null))"
+            when '1' #กรณีค้นหาด้วย ตำแหน่งสายงาน
+                if query != ""
+                    sql += " AND coalesce(cposition.shortpre,'') || coalesce(cposition.posname,'') || ' ' || coalesce(cgrouplevel.clname,'') LIKE '%#{query}%'"
+                end
+                #sql += " AND NOT(pisj18.flagupdate='1' and (length(trim(pisj18.id))=0 or pisj18.id is null))"
+            #when '3' #กรณีค้นหาด้วยตำแหน่งว่าง จะไม่สนใจคำค้นหา มันจะแสดงตำแหน่งว่างทั้งหมดที่มี
+                #sql += " AND pisj18.flagupdate='1' and (length(trim(pisj18.id))=0 or pisj18.id is null)"
+            end
+            
+            #ทุกเงื่อนไขค้นหา จะต้องเอามาเฉพาะตำแหน่งว่างเท่านั้น
+            sql += " AND pisj18.flagupdate='1' and (length(trim(pisj18.id))=0 or pisj18.id is null) order by posname"
+        end
+        
+        rs = Pisj18.find_by_sql(sql)
+        totalCount = rs.count()
+        sql += " OFFSET #{start} LIMIT #{limit}"
+        rs = Pisj18.find_by_sql(sql)
+        
+        return_data = {}
+        return_data[:totalCount] = totalCount
+        return_data[:Records]   = rs.collect{|u|{
+            :posid => u.posid,
+            :posname => u.posname,
+            :fullname => u.fullname
+          }
+        }
+        render :text => return_data.to_json,:layout => false
+    end
+    
+    def move_to_tmp
+
+        posid = params[:posid].to_s #เลขที่ตำแหน่ง
+        id = params[:id].to_s #id ของคน
+        
+        begin
+            Pisj18.transaction do
+                #ทำให้ตำแหน่งว่างลงชั่วคราว แต่ยังไม่ต้องอัพเดตค่า emptydate
+                sql = "update pisj18 set id='' where posid=#{posid}"
+                rs = Pisj18.find_by_sql(sql)
+                
+                #คัดลอกตำแหน่งปัจจุบันไปเก็บไว้ที่ชั่วคราวก่อน
+                sql = "update pispersonel set last_posid=posid where id='#{id}'"
+                rs = Pispersonel.find_by_sql(sql)
+                
+                #ทำให้ตำแหน่งปัจจุบันเป็นค่าว่างเปล่า ซึ่งจะมีผลทำให้โปรแกรมเดิมจะค้นหาข้าราชการ และอดีตไม่เจอ
+                sql = "update pispersonel set posid=null where id='#{id}'"
+                rs = Pispersonel.find_by_sql(sql)
+
+            end
+            
+            return_data = {}
+            return_data[:success] = true
+            render :text => return_data.to_json, :layout => false
+        rescue
+            return_data = {}
+            return_data[:success] = false
+            render :text => return_data.to_json, :layout => false
+        end
+    end
+    
+    def list_tmp
+        
+        sql = "SELECT pisj18.posid, cposition.shortpre, cposition.posname, cgrouplevel.clname,
+            coalesce(cprefix.prefix,'') || coalesce(pispersonel.fname,'') || '  ' || coalesce(pispersonel.lname,'') AS fullname
+            FROM pispersonel
+            LEFT JOIN cprefix ON pispersonel.pcode=cprefix.pcode
+            LEFT JOIN pisj18 ON pispersonel.last_posid=pisj18.posid
+            LEFT JOIN cposition ON pisj18.poscode=cposition.poscode
+            LEFT JOIN cgrouplevel ON pisj18.c=cgrouplevel.ccode
+            WHERE pispersonel.posid is null ORDER BY fullname"
+        
+        rs = Pispersonel.find_by_sql(sql)
+        #totalCount = rs.count()
+        
+        return_data = {}
+        #return_data[:totalCount] = totalCount
+        return_data[:Records]   = rs.collect{|u|{
+            :posid => u.posid,
+            :posname => "#{u.shortpre}#{u.posname} #{u.clname}",
+            :fullname => u.fullname
+          }
+        }
+        render :text => return_data.to_json,:layout => false
+    end
+    
+    def list_position
+        start = params[:start].to_s
+        limit = params[:limit].to_s
+        condition_id = params[:condition_id].to_s
+        query = params[:query].to_s
+        
+        sql = "SELECT pisj18.posid, cposition.shortpre, cposition.posname, cgrouplevel.clname, 
+            coalesce(cprefix.prefix,'') || coalesce(pispersonel.fname,'') || '  ' || coalesce(pispersonel.lname,'') AS fullname, 
+            pispersonel.id as xxx
+            FROM pisj18
+            LEFT JOIN cposition ON cposition.poscode=pisj18.poscode
+            LEFT JOIN cgrouplevel ON cgrouplevel.ccode=pisj18.c
+            LEFT JOIN pispersonel ON pispersonel.id=pisj18.id
+            LEFT JOIN cprefix ON cprefix.pcode=pispersonel.pcode
+            WHERE 1=1"
+        
+        if condition_id != ""
+            
+            case condition_id
+            when '1' #กรณีค้นหาด้วย ชื่อ-นามสกุลของผู้ครองตำแหน่ง
+                if query != ""
+                    sql += " AND coalesce(cprefix.prefix,'') || coalesce(pispersonel.fname,'') || coalesce(pispersonel.lname,'') LIKE '%#{query}%'"
+                end
+                sql += " AND NOT(pisj18.flagupdate='1' and (length(trim(pisj18.id))=0 or pisj18.id is null))"
+            when '2' #กรณีค้นหาด้วย ตำแหน่งสายงาน
+                if query != ""
+                    sql += " AND coalesce(cposition.posname,'') || coalesce(cgrouplevel.clname,'') LIKE '%#{query}%'"
+                end
+                sql += " AND NOT(pisj18.flagupdate='1' and (length(trim(pisj18.id))=0 or pisj18.id is null))"
+            end
+        end
+        
+        rs = Cjob.find_by_sql(sql)
+        totalCount = rs.count()
+        sql += " OFFSET #{start} LIMIT #{limit}"
+        rs = Cjob.find_by_sql(sql)
+        
+        return_data = {}
+        return_data[:totalCount] = totalCount
+        return_data[:Records]   = rs.collect{|u|{
+            :posid => u.posid,
+            :posname => "#{u.shortpre}#{u.posname} #{u.clname}",
+            :fullname => u.fullname,
+            :id => u.xxx
+          }
+        }
+        render :text => return_data.to_json,:layout => false
+    end
+    
     def list_place_dialog
         start = params[:start].to_s
         limit = params[:limit].to_s
@@ -72,6 +233,9 @@ class Cmd2Controller < ApplicationController
             left JOIN cprefix ON pispersonel.pcode=cprefix.pcode
             WHERE pisj18.posid=#{posid} "
         
+        #ต้องเป็นตำแหน่งว่างเท่านั้น
+        sql += " AND pisj18.flagupdate='1' and (length(trim(pisj18.id))=0 or pisj18.id is null)"
+        
         rs = Pisj18.find_by_sql(sql)
         
         return_data = {}
@@ -101,7 +265,7 @@ class Cmd2Controller < ApplicationController
             posid = 0
         end
         
-        sql = "select pisj18.id, 
+        sql = "select pispersonel.id, 
         coalesce(cprefix.prefix,'') || coalesce(pispersonel.fname,'') || '  ' || coalesce(pispersonel.lname,'') as fullname,
         coalesce(cposition.shortpre,'') || coalesce(cposition.posname,'') as posname,
         cgrouplevel.cname,
@@ -116,7 +280,7 @@ class Cmd2Controller < ApplicationController
         coalesce(csection.shortname,'') || coalesce(csection.secname,'') as secname,
         cjob.jobname
         from pisj18 left join 
-        pispersonel on pisj18.posid=pispersonel.posid and pisj18.id=pispersonel.id left join 
+        pispersonel on pisj18.posid=pispersonel.last_posid left join 
         cprefix on pispersonel.pcode=cprefix.pcode left join 
         cposition on pisj18.poscode=cposition.poscode left join 
         cgrouplevel on pisj18.c=cgrouplevel.ccode left join 
@@ -131,12 +295,14 @@ class Cmd2Controller < ApplicationController
         csection on pisj18.seccode=csection.seccode left join 
         cjob on pisj18.jobcode=cjob.jobcode 
         where 1=1
-        and pisj18.posid=#{posid} and pispersonel.pstatus='1' 
-        and pisj18.id<>'' and pisj18.id is not null and length(trim(pisj18.id))<>0"
+        and pisj18.posid=#{posid} and pispersonel.pstatus='1'"
         
         rs = Pisj18.find_by_sql(sql)
         
-        id = rs[0].id
+        id = ""
+        if rs.count() > 0
+            id = rs[0].id
+        end
         
         sql2 = "select 
         pispersonel.j18code, cdept.deptname, cdivision.division,

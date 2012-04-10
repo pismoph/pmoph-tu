@@ -1845,7 +1845,7 @@ var winPositionBlank = new Ext.Window({
 	iconCls: 'book-open',
 	applyTo: 'div_window_position_blank',
 	layout: 'fit',
-	width: 500,
+	width: 550,
 	height: 420,
 	autoScroll: true,
 	closeAction: 'hide',
